@@ -1,0 +1,82 @@
+
+# Where and how to store data.
+storage:
+   journal:
+      enabled: true
+      # 日志提交时间间隔 1-500,会影响磁盘性能
+      commitIntervalMs: {{ url_shorten_mongodb_journalCommitInterval|default(200) }}
+   directoryPerDB: true
+   # 刷新时间，最好不动，if 0，将无法刷新至磁盘
+   syncPeriodSecs: {{ url_shorten_mongodb_syncPeriodSecs|default(60) }}
+   # wiredTiger or inMemory
+   engine: wiredTiger
+   wiredTiger:
+      engineConfig:
+         # 0.25G-10000G,50%(RAM-1G) or 256MB(最低)
+         cacheSizeGB: {{ url_shorten_mongodb_cacheSizeGB|default(2) }}
+         # none or snappy,zlib,;
+         journalCompressor: {{ url_shorten_mongodb_journalCompressor|default("snappy") }}
+         directoryForIndexes: true
+      collectionConfig:
+         blockCompressor: {{ url_shorten_mongodb_blockCompressor|default("snappy") }}
+      indexConfig:
+         prefixCompression: true
+
+# how the process runs
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+
+net:
+   port: 27017
+   # 100-1024
+   maxIncomingConnections: {{ url_shorten_mongodb_maxIncomingConnections|default(200) }}
+   compression:
+      compressors: {{ url_shorten_mongodb_netCompressors|default("snappy") }}
+   serviceExecutor: {{ url_shorten_mongodb_serviceExecutor|default("synchronous") }}
+
+
+setParameter:
+
+   # general parameters
+   # 1-20
+   connPoolMaxConnsPerHost: {{ url_shorten_mongodb_connPoolMaxConnsPerHost|default(200) }}
+   connPoolMaxInUseConnsPerHost: {{ url_shorten_mongodb_connPoolMaxInUseConnsPerHost|default(200) }}
+   globalConnPoolIdleTimeoutMinutes: 10
+   # 1-10,
+   maxNumActiveUserIndexBuilds: {{ url_shorten_mongodb_maxNumActiveUserIndexBuilds|default(3) }}
+   # 100-1024
+   maxIndexBuildMemoryUsageMegabytes: {{ url_shorten_mongodb_maxIndexBuildMemoryUsageMegabytes|default(200) }}
+   # 释放内存的速度 0-10
+   tcmallocReleaseRate: {{ url_shorten_mongodb_tcmallocReleaseRate|default(1.0) }}
+   # Diagnostic Parameters
+   # 100-10000
+   diagnosticDataCollectionPeriodMillis: {{ url_shorten_mongodb_diagnosticDataCollectionPeriodMillis|default(1000) }}
+   # 1000-10000000 The maximum number of sessions that can be cached.
+   maxSessions: {{ url_shorten_mongodb_maxSessions|default(1000000) }}
+   # 5-60 交易记录在符合清理条件之前在交易集合中存在的最短时间
+   TransactionRecordMinimumLifetimeMinutes: {{ url_shorten_mongodb_TransactionRecordMinimumLifetimeMinutes|default(5) }}
+   enableFlowControl: true
+   # decreasing, rather than increasing, the value may prove to be more useful.
+   flowControlTargetLagSeconds: {{ url_shorten_mongodb_flowControlTargetLagSeconds|default(10) }}
+   # The specified value must be greater than or equal to 0, with 0 to disable warnings.
+   flowControlWarnThresholdSeconds: 10
+   initialSyncTransientErrorRetryPeriodSeconds: 86400
+   oplogFetcherUsesExhaust: true
+
+   # 30-300
+   oplogInitialFindMaxSeconds: {{ url_shorten_mongodb_oplogInitialFindMaxSeconds|default(60) }}
+   # 1-256,However, the maximum number of threads used is capped at twice the number of available cores(32 or 16)
+   replWriterThreadCount: {{ url_shorten_mongodb_replWriterThreadCount|default(16) }}
+   # 0-256 而且必须小于等于replWriterThreadCount
+   replWriterMinThreadCount: 0
+   # Storage Parameters
+   wiredTigerConcurrentReadTransactions: {{ url_shorten_mongodb_wiredTigerConcurrentReadTransactions|default(128) }}
+   wiredTigerConcurrentWriteTransactions: {{ url_shorten_mongodb_wiredTigerConcurrentWriteTransactions|default(128) }}
+   #
+   maxTransactionLockRequestTimeoutMillis: {{ url_shorten_mongodb_maxTransactionLockRequestTimeoutMillis|default(10) }}
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+name,value
+SN_Service_1,44
+SN_Service_2,31
+SN_Service_3,22
+SN_EndToEnd,33
+MM_Service_1,64
+MM_Service_2,40
+MM_Service_3,19
+MM_EndToEnd,50
+HR_Service_1,67
+HR_Service_2,26
+HR_Service_3,8
+HR_EndToEnd,45
+

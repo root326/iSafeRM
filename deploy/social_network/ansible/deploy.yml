@@ -1,0 +1,130 @@
+---
+
+- name: prepare files
+  hosts: all
+
+  vars_files:
+    - "{{ conf_path }}"
+  vars:
+    benchmark: social_network
+
+  tasks:
+    - name: check if .tmp exists
+      ansible.builtin.stat: path=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+      register: tmp_dir
+      
+    - name: copy deploy files
+      ansible.builtin.copy: src={{ item }} dest=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+      with_items:
+        - ~/{{ project_name }}/deploy/social_network/ansible/templates
+        - ~/{{ project_name }}/deploy/social_network/ansible/volumes
+        - ~/{{ project_name }}/deploy/social_network/docker-swarm/volumes/
+      when: tmp_dir.stat.exists == False
+
+    - name: generate config from template
+      template: src=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
+      with_items:
+         - { src: swarm.yml.j2, dest: swarm.yml }
+         - { src: swarm-frontend.yml.j2, dest: swarm-frontend.yml }
+         - { src: swarm-composepost.yml.j2, dest: swarm-composepost.yml }
+         - { src: parameters-config.txt.j2, dest: config/parameters-config.txt }
+         - { src: nginx.conf.j2, dest: nginx-web-server/conf/nginx.conf }
+         - { src: compose_post_redis.conf.j2, dest: compose_post_redis.conf }
+         - { src: home_timeline_redis.conf.j2, dest: home_timeline_redis.conf }
+         - { src: media_mongodb.conf.j2, dest: media_mongodb.conf }
+         - { src: post_storage_mongodb.conf.j2, dest: post_storage_mongodb.conf }
+         - { src: social_graph_mongodb.conf.j2, dest: social_graph_mongodb.conf }
+         - { src: social_graph_redis.conf.j2, dest: social_graph_redis.conf }
+         - { src: url_shorten_mongodb.conf.j2, dest: url_shorten_mongodb.conf }
+         - { src: user_mongodb.conf.j2, dest: user_mongodb.conf }
+         - { src: user_timeline_mongodb.conf.j2, dest: user_timeline_mongodb.conf }
+         - { src: user_timeline_redis.conf.j2, dest: user_timeline_redis.conf }
+
+
+- name: socialnetwork benchmark
+  hosts: master
+  vars:
+    benchmark: social_network
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+  tasks:
+#    - name: Create Docker Overlay Network
+#      docker_network:
+#        name: social-network-overlay
+#        driver: overlay
+##        ipam_driver: default
+#        ipam_config:
+#          - subnet: 12.0.0.0/8
+
+    - name: deploy socialnetwork benchmark use docker swarm-frontend
+      community.docker.docker_stack:
+        name: sn
+        state: present
+        compose:
+          - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/swarm-frontend.yml
+
+    - name: deploy socialnetwork benchmark use docker swarm
+      community.docker.docker_stack:
+        name: sn
+        state: present
+        compose:
+          - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/swarm.yml
+
+    - name: wait for 30 seconds
+      ansible.builtin.wait_for:
+        timeout: 120
+
+    - name: create output dir
+      ansible.builtin.file:
+        path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output
+        state: directory
+
+#    - name: initial socialnetwork benchmark
+#      shell:
+#        cmd: >
+#          /home/lilong/miniconda3/envs/mytunning/bin/python scripts/init_social_graph.py --ip={{ entry_ip }} --graph=socfb-Reed98
+#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/init_social_graph.txt 2>&1
+#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
+
+#    - name: wait for 10 seconds
+#      ansible.builtin.wait_for:
+#        timeout: 10
+#
+    - name: compose post {{ workload1 }}
+      shell:
+        cmd: >
+          wrk -D exp -t 1 -c 10 -d 60 -R {{ workload1 }} -L -s ./compose-post.lua http://{{ entry_ip }}:8082/wrk2-api/post/compose
+          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/compose_post.log 2>&1
+        chdir: ~/{{ project_name }}/deploy/social_network/scripts
+      async: 500
+      poll: 0
+      register: compose_post
+#
+#    - name: read user timeline {{ workload2 }}
+#      shell:
+#        cmd: >
+#          bash read_user_timeline.sh {{ entry_ip }} {{ benchmark }}
+#        chdir: ~/{{ project_name }}/deploy/social_network/workload
+#      async: 500
+#      poll: 0
+#      register: read_user_timeline
+#
+#    - name: read home timeline {{ workload3 }}
+#      shell:
+#        cmd: >
+#          bash read_home_timeline.sh {{ entry_ip }} {{ benchmark }}
+#        chdir: ~/{{ project_name }}/deploy/social_network/workload
+#      async: 500
+#      poll: 0
+#      register: read_home_timeline
+##
+    - name: wait for compose-post finish
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: async_results
+      until: async_results.finished
+      retries: 20
+      delay: 30
+      with_items:
+        - "{{ compose_post }}"
+#        - "{{ read_user_timeline }}"
+#        - "{{ read_home_timeline }}"

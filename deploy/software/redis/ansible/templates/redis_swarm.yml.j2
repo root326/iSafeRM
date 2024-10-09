@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  redis:
+    hostname: redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ redis_replicas|default(1) }}
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('node1') }}
+      resources:
+        limits:
+          cpus: "{{ redis_cpus|default(1) }}"
+          memory: {{ redis_memory|default(1) }}G
+    ports:
+      - target: {{ port|default('6379') }}
+        published: {{ port|default('6379') }}
+        protocol: tcp
+        mode: host
+    image: redis:7.0.10
+    volumes:
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf

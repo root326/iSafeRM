@@ -1,0 +1,24 @@
+- name: socialnetwork benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+  tasks:
+
+    - name: clean up hotel_reservation benchmark
+      community.docker.docker_stack:
+        name: hr
+        state: absent
+        absent_retries: 20
+        absent_retries_interval: 5
+
+
+
+- name: clean up tmp
+  hosts: all
+  vars:
+    benchmark: hotel_reservation
+  tasks:
+    - name: delete tmp
+      ansible.builtin.file:
+        path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+        state: absent

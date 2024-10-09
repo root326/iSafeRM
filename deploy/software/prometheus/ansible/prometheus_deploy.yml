@@ -1,0 +1,41 @@
+---
+
+- name: prepare files
+  hosts: all
+  vars_files:
+#    - "{{ conf_path }}"
+#    - "~/tuning_microservice/tests/test_conf.yml"
+  vars:
+    benchmark: prometheus
+  tasks:
+    - name: check if .tmp exists
+      ansible.builtin.stat: path=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      register: tmp_dir
+
+    - name: copy deploy files
+      ansible.builtin.copy: src={{ item }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      with_items:
+        - ~/tuning_microservice/deploy/software/{{ benchmark }}/ansible/templates
+      when: tmp_dir.stat.exists == False
+
+    - name: generate config from template
+      template: src=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
+      with_items:
+         - { src: "{{ benchmark }}_swarm.yml.j2", dest: "{{ benchmark }}_swarm.yml" }
+         - { src: "{{ benchmark }}.yml.j2", dest: "{{ benchmark }}.yml" }
+         - { src: .my.cnf.j2, dest: .my.cnf }
+
+
+- name: prometheus benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    benchmark: prometheus
+  tasks:
+
+    - name: deploy prometheus  use docker swarm
+      community.docker.docker_stack:
+        name: pt
+        state: present
+        compose:
+          - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/prometheus_swarm.yml

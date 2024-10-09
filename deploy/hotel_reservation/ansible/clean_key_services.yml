@@ -1,0 +1,22 @@
+- name: hotel_reservation benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+  tasks:
+    - name: docker service rm
+      shell:
+        cmd: >
+          bash rm_services.sh
+        chdir: ~/{{ project_name }}/deploy/hotel_reservation/scripts
+
+
+
+- name: clean up tmp
+  hosts: all
+  vars:
+    benchmark: hotel_reservation
+  tasks:
+    - name: delete tmp
+      ansible.builtin.file:
+        path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+        state: absent

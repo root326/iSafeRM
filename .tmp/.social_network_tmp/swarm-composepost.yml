@@ -1,0 +1,309 @@
+version: "3.9"
+
+
+services:
+  compose-post-redis:
+    hostname: compose-post-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: redis:7.0.10
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/compose_post_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+
+  post-storage-memcached:
+    hostname: post-storage-memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: memcached:1.6
+    command:
+      -m 64
+      -n 64
+      -f 1.25
+      -c 1024
+      -t 4
+      -R 24
+      -r 24
+      -b 1024
+
+  post-storage-mongodb:
+    hostname: post-storage-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: mongo:4.4
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/volumes/post-storage-mongodb:/data
+      - ~/iSafeRM/.tmp/.social_network_tmp/post_storage_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+
+
+  user-timeline-mongodb:
+    hostname: user-timeline-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: mongo:4.4
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/volumes/user-timeline-mongodb:/data
+      - ~/iSafeRM/.tmp/.social_network_tmp/user_timeline_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+
+
+
+  compose-post-service:
+    depends_on: [write-home-timeline-rabbitmq]
+    entrypoint: ComposePostService
+    hostname: compose-post-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 0.4G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  media-service:
+    entrypoint: MediaService
+    hostname: media-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  post-storage-service:
+    entrypoint: PostStorageService
+    hostname: post-storage-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    ports:
+      - target: 10002
+        published: 9090
+        protocol: tcp
+        mode: host
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  social-graph-service:
+    entrypoint: SocialGraphService
+    hostname: social-graph-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  text-service:
+    entrypoint: TextService
+    hostname: text-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  unique-id-service:
+    entrypoint: UniqueIdService
+    hostname: unique-id-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  url-shorten-service:
+    entrypoint: UrlShortenService
+    hostname: url-shorten-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-mention-service:
+    entrypoint: UserMentionService
+    hostname: user-mention-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-service:
+    entrypoint: UserService
+    hostname: user-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-timeline-service:
+    entrypoint: UserTimelineService
+    hostname: user-timeline-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1.0G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+
+  write-home-timeline-service:
+    depends_on: [write-home-timeline-rabbitmq]
+    entrypoint: WriteHomeTimelineService
+    hostname: write-home-timeline-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1.0G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  nginx-web-server:
+    hostname: nginx-web-server
+    image: yg397/openresty-thrift:xenial
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == aituningnode1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1.0G
+    ports:
+      - target: 8080
+        published: 8082
+        protocol: tcp
+        mode: host
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/pages:/usr/local/openresty/nginx/pages
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
+      - ~/iSafeRM/.tmp/.social_network_tmp/gen-lua:/gen-lua
+      - ~/iSafeRM/.tmp/.social_network_tmp/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
+      - ~/iSafeRM/.tmp/.social_network_tmp/keys:/keys
+
+  social-graph-redis:
+    hostname: social-graph-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: redis:7.0.10
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/social_graph_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+  home-timeline-redis:
+    hostname: home-timeline-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    image: redis:7.0.10
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/volumes/home-timeline-redis:/data
+      - ~/iSafeRM/.tmp/.social_network_tmp/compose_post_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf

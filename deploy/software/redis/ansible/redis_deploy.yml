@@ -1,0 +1,82 @@
+---
+
+- name: prepare files
+  hosts: all
+  vars_files:
+    - "{{ conf_path }}"
+  vars:
+    benchmark: redis
+
+  tasks:
+    - name: check if .tmp exists
+      ansible.builtin.stat: path=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      register: tmp_dir
+
+    - name: copy deploy files
+      ansible.builtin.copy: src={{ item }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      with_items:
+        - ~/tuning_microservice/deploy/software/{{ benchmark }}/ansible/templates
+      when: tmp_dir.stat.exists == False
+
+    - name: generate config from template
+      template: src=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
+      with_items:
+         - { src: "{{ benchmark }}_swarm.yml.j2", dest: "{{ benchmark }}_swarm.yml" }
+         - { src: "{{ benchmark }}.conf.j2", dest: "{{ benchmark }}.conf" }
+         - { src: workloada.j2, dest: workloada }
+
+
+
+- name: redis benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    benchmark: redis
+  tasks:
+
+    - name: deploy {{ benchmark }} benchmark use docker swarm
+      community.docker.docker_stack:
+        name: "{{ benchmark }}"
+        state: present
+        compose:
+          - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ benchmark }}_swarm.yml
+
+
+    - name: create output dir
+      ansible.builtin.file:
+        path: ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/output
+        state: directory
+
+    - name: wait for 30 seconds
+      ansible.builtin.wait_for:
+        timeout: 80
+
+    - name: wk load {{ benchmark }}
+      shell:
+        cmd: >
+          ./bin/ycsb.sh load {{ benchmark }} -s -P ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/workloada > ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/output/workloada_load.txt 2>&1
+        chdir: ~/tuning_microservice/deploy/wk/ycsb-0.17.0
+      async: 500
+      poll: 0
+      register: wk_load
+
+    - name: wk run {{ benchmark }}
+      shell:
+        cmd: >
+          ./bin/ycsb.sh run {{ benchmark }} -s -P ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/workloada > ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/output/workloada_run.txt 2>&1
+        chdir: ~/tuning_microservice/deploy/wk/ycsb-0.17.0
+      async: 500
+      poll: 0
+      register: wk_run
+
+
+    - name: wait for wk_run,wk_load
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: async_results
+      until: async_results.finished
+      retries: 20
+      delay: 15
+      with_items:
+        - "{{ wk_run }}"
+        - "{{ wk_load }}"

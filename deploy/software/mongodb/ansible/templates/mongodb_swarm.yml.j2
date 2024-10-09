@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  mongodb:
+    hostname: mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ mongodb_replicas|default(1) }}
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('node1') }}
+      resources:
+        limits:
+          cpus: "{{ mongodb_cpus|default(1) }}"
+          memory: {{ mongodb_memory|default(1) }}G
+    ports:
+      - target: {{ port|default('27017') }}
+        published: {{ port|default('27017') }}
+        protocol: tcp
+        mode: host
+    image: mongo:4.4
+    volumes:
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf

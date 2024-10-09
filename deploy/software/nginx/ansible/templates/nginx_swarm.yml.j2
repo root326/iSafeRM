@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  nginx:
+    hostname: nginx
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ nginx_replicas|default(1) }}
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('node1') }}
+      resources:
+        limits:
+          cpus: "{{ nginx_cpus|default(1) }}"
+          memory: {{ nginx_memory|default(1) }}G
+    ports:
+      - target: {{ port|default('80') }}
+        published: {{ port|default('80') }}
+        protocol: tcp
+        mode: host
+{#      - 443:443#}
+{#      - "127.0.0.1:8080:8080"#}
+    image: nginx:1.25
+    volumes:
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/nginx.conf:/etc/nginx/nginx.conf
+{#      - ~/tuning_microservice/.tmp/fastcgi.conf:/etc/nginx/fastcgi.conf#}
+{#      - ~/tuning_microservice/.tmp/mime.types:/etc/nginx/mime.types#}
+{#      - ~/tuning_microservice/.tmp/proxy.conf:/etc/nginx/proxy.conf#}
+{#    command: --with-http_stub_status_module#}

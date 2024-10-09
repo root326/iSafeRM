@@ -1,0 +1,82 @@
+
+# Where and how to store data.
+storage:
+   journal:
+      enabled: true
+      # 日志提交时间间隔 1-500,会影响磁盘性能
+      commitIntervalMs: {{ mongodb_user_journalCommitInterval|default(200) }}
+   directoryPerDB: true
+   # 刷新时间，最好不动，if 0，将无法刷新至磁盘
+   syncPeriodSecs: {{ mongodb_user_syncPeriodSecs|default(60) }}
+   # wiredTiger or inMemory
+   engine: wiredTiger
+   wiredTiger:
+      engineConfig:
+         # 0.25G-10000G,50%(RAM-1G) or 256MB(最低)
+         cacheSizeGB: {{ mongodb_user_cacheSizeGB|default(2) }}
+         # none or snappy,zlib,;
+         journalCompressor: {{ mongodb_user_journalCompressor|default("snappy") }}
+         directoryForIndexes: true
+      collectionConfig:
+         blockCompressor: {{ mongodb_user_blockCompressor|default("snappy") }}
+      indexConfig:
+         prefixCompression: true
+
+# how the process runs
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+
+net:
+   port: 27017
+   # 100-1024
+   maxIncomingConnections: {{ mongodb_user_maxIncomingConnections|default(200) }}
+   compression:
+      compressors: {{ mongodb_user_netCompressors|default("snappy") }}
+   serviceExecutor: {{ mongodb_user_serviceExecutor|default("synchronous") }}
+
+
+setParameter:
+
+   # general parameters
+   # 1-20
+   connPoolMaxConnsPerHost: {{ mongodb_user_connPoolMaxConnsPerHost|default(200) }}
+   connPoolMaxInUseConnsPerHost: {{ mongodb_user_connPoolMaxInUseConnsPerHost|default(200) }}
+   globalConnPoolIdleTimeoutMinutes: 10
+   # 1-10,
+   maxNumActiveUserIndexBuilds: {{ mongodb_user_maxNumActiveUserIndexBuilds|default(3) }}
+   # 100-1024
+   maxIndexBuildMemoryUsageMegabytes: {{ mongodb_user_maxIndexBuildMemoryUsageMegabytes|default(200) }}
+   # 释放内存的速度 0-10
+   tcmallocReleaseRate: {{ mongodb_user_tcmallocReleaseRate|default(1.0) }}
+   # Diagnostic Parameters
+   # 100-10000
+   diagnosticDataCollectionPeriodMillis: {{ mongodb_user_diagnosticDataCollectionPeriodMillis|default(1000) }}
+   # 1000-10000000 The maximum number of sessions that can be cached.
+   maxSessions: {{ mongodb_user_maxSessions|default(1000000) }}
+   # 5-60 交易记录在符合清理条件之前在交易集合中存在的最短时间
+   TransactionRecordMinimumLifetimeMinutes: {{ mongodb_user_TransactionRecordMinimumLifetimeMinutes|default(5) }}
+   enableFlowControl: true
+   # decreasing, rather than increasing, the value may prove to be more useful.
+   flowControlTargetLagSeconds: {{ mongodb_user_flowControlTargetLagSeconds|default(10) }}
+   # The specified value must be greater than or equal to 0, with 0 to disable warnings.
+   flowControlWarnThresholdSeconds: 10
+   initialSyncTransientErrorRetryPeriodSeconds: 86400
+   oplogFetcherUsesExhaust: true
+
+   # 30-300
+   oplogInitialFindMaxSeconds: {{ mongodb_user_oplogInitialFindMaxSeconds|default(60) }}
+   # 1-256,However, the maximum number of threads used is capped at twice the number of available cores(32 or 16)
+   replWriterThreadCount: {{ mongodb_user_replWriterThreadCount|default(16) }}
+   # 0-256 而且必须小于等于replWriterThreadCount
+   replWriterMinThreadCount: 0
+   # Storage Parameters
+   wiredTigerConcurrentReadTransactions: {{ mongodb_user_wiredTigerConcurrentReadTransactions|default(128) }}
+   wiredTigerConcurrentWriteTransactions: {{ mongodb_user_wiredTigerConcurrentWriteTransactions|default(128) }}
+   #
+   maxTransactionLockRequestTimeoutMillis: {{ mongodb_user_maxTransactionLockRequestTimeoutMillis|default(10) }}
+
+
+
+
+
+

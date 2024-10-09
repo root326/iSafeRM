@@ -1,0 +1,62 @@
+{#user       www www;  ## Default: nobody#}
+worker_processes  {{ nginx_worker_processes|default(1) }};  ## Default: 1
+{#error_log  logs/error.log;#}
+{#pid        logs/nginx.pid;#}
+worker_rlimit_nofile {{ nginx_worker_rlimit_nofile|default(65535) }};
+thread_pool thread1 threads={{ nginx_threads|default(32) }} max_queue={{ nginx_max_queue|default(65536) }};
+
+
+
+events {
+    #设置网路连接序列化，防止惊群现象发生，默认为on
+    accept_mutex on;
+
+    #默认: 500ms 如果一个进程没有互斥锁，它将延迟至少多长时间。默认情况下，延迟是500ms 。
+    accept_mutex_delay {{ nginx_accept_mutex_delay|default(500) }}ms;
+
+    #设置一个进程是否同时接受多个网络连接，默认为off
+    multi_accept on;
+
+    #事件驱动模型，select|poll|kqueue|epoll|resig|/dev/poll|eventport，不建议设置，nginx会自行选择
+    #use epoll;
+
+    #最大连接数，默认为512
+    worker_connections  {{ nginx_worker_connections|default(1024) }};
+}
+
+http {
+{#  include    /etc/nginx/mime.types;#}
+{#  include    /etc/nginx/proxy.conf;#}
+{#  include    /etc/nginx/fastcgi.conf;#}
+{#  index    index.html index.htm index.php;#}
+  #允许sendfile方式传输文件，默认为off，可以在http块，server块，location块。
+  sendfile {{ nginx_sendfile|default('on') }};
+  tcp_nopush {{ nginx_tcp_nopush|default('on') }};
+  tcp_nodelay {{ nginx_tcp_nodelay|default('on') }};
+    #每个进程每次调用传输数量不能大于设定的值，默认为0，即不设上限。
+  # sendfile_max_chunk 100k;
+
+    #连接超时时间，默认为75s，可以在http，server，location块。
+  keepalive_timeout {{ nginx_keepalive_timeout|default(70) }};
+  aio threads=thread1;
+    #开启gzip资源压缩
+  gzip  on;
+  server { # simple load balancing
+    listen 80;
+{#    server_name     big.server.com;#}
+{#    access_log      logs/big.server.access.log main;#}
+
+    location /stub_status {
+        stub_status on;
+    }
+
+{#    location /api {#}
+{#        api write=on;#}
+{#    }#}
+
+{#    location / {#}
+{#      proxy_pass      http://big_server_com;#}
+{#    }#}
+  }
+}
+

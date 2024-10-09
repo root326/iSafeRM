@@ -1,0 +1,11 @@
+microservice,type,parameter,categorical,discrete,float,range,step,conditional,units,comments,default
+memcached,memcached,m,,1,,32;1024,32,,,,64
+memcached,memcached,n,,1,,48;1024,32,,,,64
+memcached,memcached,f,,,1,1;10,1,,,,1.25
+memcached,memcached,c,,1,,32;2048,32,,,,1024
+memcached,memcached,t,,1,,1;32,2,,,,4
+memcached,memcached,R,,1,,20;128,10,,,,24
+memcached,memcached,b,,1,,128;2048,32,,,,1024
+memcached,resource,cpus,,,1,0.1;16,0.5,,,,0.5
+memcached,resource,memory,,,1,0.1;16,0.5,,,,0.5
+memcached,resource,replicas,,1,,1;1,1,,,,1

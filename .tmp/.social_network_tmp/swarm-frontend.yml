@@ -1,0 +1,107 @@
+version: "3.8"
+
+services:
+
+
+  elastic-search:
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      discovery.type: single-node
+      http.host: 0.0.0.0
+      transport.host: 127.0.0.1
+      xpack.security.enabled: 'false'
+    hostname: elastic-search
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == aituningnode1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    image: elasticsearch:7.17.18
+    ports:
+      - target: 9200
+        published: 9200
+        protocol: tcp
+        mode: host
+      - target: 9300
+        published: 9300
+        protocol: tcp
+        mode: host
+
+
+  jaeger:
+    command: --es.server-urls=http://elastic-search:9200 --es.num-shards=1 --es.num-replicas=0
+      --log-level=error
+    environment: {COLLECTOR_ZIPKIN_HTTP_PORT: '9411', SPAN_STORAGE_TYPE: elasticsearch}
+    hostname: jaeger
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == aituningnode1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    image: jaegertracing/all-in-one:1.43
+    ports:
+      - target: 16686
+        published: 16688
+        protocol: tcp
+        mode: host
+
+
+  media-frontend:
+    hostname: media-frontend
+    image: yg397/media-frontend:xenial
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 0.2G
+    ports:
+      - target: 8080
+        published: 8081
+        protocol: tcp
+        mode: host
+    volumes: ['~/iSafeRM/.tmp/.social_network_tmp/media-frontend/lua-scripts:/usr/local/openresty/nginx/lua-scripts',
+      '~/iSafeRM/.tmp/.social_network_tmp/media-frontend/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf']
+
+  nginx-web-server:
+    hostname: nginx-web-server
+    image: yg397/openresty-thrift:xenial
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == aituningnode1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1.0G
+    ports:
+      - target: 8080
+        published: 8082
+        protocol: tcp
+        mode: host
+    volumes:
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/pages:/usr/local/openresty/nginx/pages
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ~/iSafeRM/.tmp/.social_network_tmp/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
+      - ~/iSafeRM/.tmp/.social_network_tmp/gen-lua:/gen-lua
+      - ~/iSafeRM/.tmp/.social_network_tmp/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
+      - ~/iSafeRM/.tmp/.social_network_tmp/keys:/keys
+

@@ -1,0 +1,444 @@
+version: "3.9"
+
+
+services:
+  compose-post-redis:
+    hostname: compose-post-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ compose_post_redis_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ compose_post_redis_cpus|default(0.1) }}"
+          memory: {{ compose_post_redis_memory|default(0.2) }}G
+    image: redis:7.0.10
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/compose_post_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+  home-timeline-redis:
+    hostname: home-timeline-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ home_timeline_redis_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ home_timeline_redis_cpus|default(0.1) }}"
+          memory: {{ home_timeline_redis_memory|default(0.2) }}G
+    image: redis:7.0.10
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/volumes/home-timeline-redis:/data
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/compose_post_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+  media-memcached:
+    hostname: media-memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ media_memcached_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ media_memcached_cpus|default(0.1) }}"
+          memory: {{ media_memcached_memory|default(0.2) }}G
+    image: memcached:1.6
+    command:
+      -m {{ media_memcached_m|default(64) }}
+      -n {{ media_memcached_n|default(64) }}
+      -f {{ media_memcached_f|default(1.25) }}
+      -c {{ media_memcached_c|default(1024) }}
+      -t {{ media_memcached_t|default(4) }}
+      -R {{ media_memcached_R|default(24) }}
+      -r {{ media_memcached_r|default(24) }}
+      -b {{ media_memcached_b|default(1024) }}
+
+  media-mongodb:
+    hostname: media-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ media_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ media_mongodb_cpus|default(0.1) }}"
+          memory: {{ media_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/media_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  post-storage-memcached:
+    hostname: post-storage-memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ post_storage_memcached_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ post_storage_memcached_cpus|default(0.1) }}"
+          memory: {{ post_storage_memcached_memory|default(0.2) }}G
+    image: memcached:1.6
+    command:
+      -m {{ post_storage_memcached_m|default(64) }}
+      -n {{ post_storage_memcached_n|default(64) }}
+      -f {{ post_storage_memcached_f|default(1.25) }}
+      -c {{ post_storage_memcached_c|default(1024) }}
+      -t {{ post_storage_memcached_t|default(4) }}
+      -R {{ post_storage_memcached_R|default(24) }}
+      -r {{ post_storage_memcached_r|default(24) }}
+      -b {{ post_storage_memcached_b|default(1024) }}
+
+  post-storage-mongodb:
+    hostname: post-storage-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ post_storage_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ post_storage_mongodb_cpus|default(0.1) }}"
+          memory: {{ post_storage_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/volumes/post-storage-mongodb:/data
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/post_storage_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  social-graph-mongodb:
+    hostname: social-graph-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ social_graph_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ social_graph_mongodb_cpus|default(0.1) }}"
+          memory: {{ social_graph_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/volumes/social-graph-mongodb:/data
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/social_graph_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  social-graph-redis:
+    hostname: social-graph-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ social_graph_redis_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ social_graph_redis_cpus|default(0.1) }}"
+          memory: {{ social_graph_redis_memory|default(0.2) }}G
+    image: redis:7.0.10
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/social_graph_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+  url-shorten-memcached:
+    hostname: url-shorten-memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ url_shorten_memcached_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ url_shorten_memcached_cpus|default(0.1) }}"
+          memory: {{ url_shorten_memcached_memory|default(0.2) }}G
+    image: memcached:1.6
+    command:
+      -m {{ url_shorten_memcached_m|default(64) }}
+      -n {{ url_shorten_memcached_n|default(64) }}
+      -f {{ url_shorten_memcached_f|default(1.25) }}
+      -c {{ url_shorten_memcached_c|default(1024) }}
+      -t {{ url_shorten_memcached_t|default(4) }}
+      -R {{ url_shorten_memcached_R|default(24) }}
+      -r {{ url_shorten_memcached_r|default(24) }}
+      -b {{ url_shorten_memcached_b|default(1024) }}
+
+  url-shorten-mongodb:
+    hostname: url-shorten-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ url_shorten_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ url_shorten_mongodb_cpus|default(0.1) }}"
+          memory: {{ url_shorten_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/url_shorten_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  user-memcached:
+    hostname: user-memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_memcached_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_memcached_cpus|default(0.1) }}"
+          memory: {{ user_memcached_memory|default(0.2) }}G
+    image: memcached:1.6
+    command:
+      -m {{ user_memcached_memcached_m|default(64) }}
+      -n {{ user_memcached_memcached_n|default(64) }}
+      -f {{ user_memcached_memcached_f|default(1.25) }}
+      -c {{ user_memcached_memcached_c|default(1024) }}
+      -t {{ user_memcached_memcached_t|default(4) }}
+      -R {{ user_memcached_memcached_R|default(24) }}
+      -r {{ user_memcached_memcached_r|default(24) }}
+      -b {{ user_memcached_memcached_b|default(1024) }}
+
+  user-mongodb:
+    hostname: user-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_mongodb_cpus|default(0.1) }}"
+          memory: {{ user_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/user_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  user-timeline-mongodb:
+    hostname: user-timeline-mongodb
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_timeline_mongodb_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_timeline_mongodb_cpus|default(0.1) }}"
+          memory: {{ user_timeline_mongodb_memory|default(0.2) }}G
+    image: mongo:4.4
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/volumes/user-timeline-mongodb:/data
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/user_timeline_mongodb.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  user-timeline-redis:
+    hostname: user-timeline-redis
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_timeline_redis_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_timeline_redis_cpus|default(0.1) }}"
+          memory: {{ user_timeline_redis_memory|default(0.2) }}G
+    image: redis:7.0.10
+    volumes:
+      - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/user_timeline_redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
+
+
+
+  compose-post-service:
+    depends_on: [write-home-timeline-rabbitmq]
+    entrypoint: ComposePostService
+    hostname: compose-post-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ compose_post_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ compose_post_service_cpus|default(0.1) }}"
+          memory: {{ compose_post_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+  home-timeline-service:
+    entrypoint: HomeTimelineService
+    hostname: home-timeline-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ home_timeline_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ home_timeline_service_cpus|default(0.1) }}"
+          memory: {{ home_timeline_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+  media-service:
+    entrypoint: MediaService
+    hostname: media-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ media_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ media_service_cpus|default(0.1) }}"
+          memory: {{ media_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  post-storage-service:
+    entrypoint: PostStorageService
+    hostname: post-storage-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ post_storage_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ post_storage_service_cpus|default(0.1) }}"
+          memory: {{ post_storage_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    ports:
+      - target: 10002
+        published: 9090
+        protocol: tcp
+        mode: host
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  social-graph-service:
+    entrypoint: SocialGraphService
+    hostname: social-graph-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ social_graph_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ social_graph_service_cpus|default(0.1) }}"
+          memory: {{ social_graph_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  text-service:
+    entrypoint: TextService
+    hostname: text-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ text_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ text_service_cpus|default(0.1) }}"
+          memory: {{ text_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  unique-id-service:
+    entrypoint: UniqueIdService
+    hostname: unique-id-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ unique_id_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ unique_id_service_cpus|default(0.1) }}"
+          memory: {{ unique_id_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  url-shorten-service:
+    entrypoint: UrlShortenService
+    hostname: url-shorten-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ url_shorten_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ url_shorten_service_cpus|default(0.1) }}"
+          memory: {{ url_shorten_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-mention-service:
+    entrypoint: UserMentionService
+    hostname: user-mention-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_mention_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_mention_service_cpus|default(0.1) }}"
+          memory: {{ user_mention_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-service:
+    entrypoint: UserService
+    hostname: user-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_service_cpus|default(0.1) }}"
+          memory: {{ user_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  user-timeline-service:
+    entrypoint: UserTimelineService
+    hostname: user-timeline-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ user_timeline_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ user_timeline_service_cpus|default(0.1) }}"
+          memory: {{ user_timeline_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  write-home-timeline-rabbitmq:
+    environment: {RABBITMQ_DEFAULT_VHOST: /, RABBITMQ_ERLANG_COOKIE: WRITE-HOME-TIMELINE-RABBITMQ}
+    hostname: write-home-timeline-rabbitmq
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ write_home_timeline_rabbitmq_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ write_home_timeline_rabbitmq_cpus|default(0.1) }}"
+          memory: {{ write_home_timeline_rabbitmq_memory|default(0.2) }}G
+    image: rabbitmq:3.10.0
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+
+  write-home-timeline-service:
+    depends_on: [write-home-timeline-rabbitmq]
+    entrypoint: WriteHomeTimelineService
+    hostname: write-home-timeline-service
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ write_home_timeline_service_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ write_home_timeline_service_cpus|default(0.1) }}"
+          memory: {{ write_home_timeline_service_memory|default(0.2) }}G
+    image: gaganso/threadmanager:service_threads
+    volumes: ['~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/config/parameters-config.txt:/social-network-microservices/config/parameters-config.txt']
+
+

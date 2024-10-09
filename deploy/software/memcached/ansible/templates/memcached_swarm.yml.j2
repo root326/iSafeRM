@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  memcached:
+    hostname: memcached
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ memcached_replicas|default(1) }}
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('node1') }}
+      resources:
+        limits:
+          cpus: "{{ memcached_cpus|default(16) }}"
+          memory: {{ memcached_memory|default(16) }}G
+    ports:
+      - target: {{ port|default('11211') }}
+        published: {{ port|default('11211') }}
+        protocol: tcp
+        mode: host
+    image: memcached:1.6
+{#    volumes:#}
+{#      - ~/tuning_microservice/.tmp/memcached.conf:/etc/memcached.conf#}
+    command:
+      -m {{ memcached_m|default(64) }}
+      -n {{ memcached_n|default(64) }}
+      -f {{ memcached_f|default(1.25) }}
+      -c {{ memcached_c|default(1024) }}
+      -t {{ memcached_t|default(4) }}
+      -R {{ memcached_R|default(24) }}
+      -r {{ memcached_r|default(24) }}
+      -b {{ memcached_b|default(1024) }}
+

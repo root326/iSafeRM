@@ -1,0 +1,37 @@
+- name: socialnetwork benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+  tasks:
+#    - name: check if docker network exists
+#      docker_network_info:
+#        name: social-network-overlay
+#      register: network_info
+#
+#    - name: remove docker network
+#      docker_network:
+#        name: social-network-overlay
+#        state: absent
+#      when: network_info
+#    - name: clean up socialnetwork benchmark
+#      community.docker.docker_stack:
+#        name: sn
+#        state: absent
+#        absent_retries: 20
+#        absent_retries_interval: 5
+    - name: docker service rm
+      shell:
+        cmd: >
+          bash rm_services.sh
+        chdir: ~/{{ project_name }}/deploy/social_network/scripts
+
+
+- name: clean up tmp
+  hosts: all
+  vars:
+    benchmark: social_network
+  tasks:
+    - name: delete tmp
+      ansible.builtin.file:
+        path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+        state: absent

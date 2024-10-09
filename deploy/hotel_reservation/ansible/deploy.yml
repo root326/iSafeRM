@@ -1,0 +1,81 @@
+---
+- name: prepare files
+  hosts: all
+  vars_files:
+    - "{{ conf_path }}"
+  vars:
+    benchmark: hotel_reservation
+
+  tasks:
+    - name: check if .tmp exists
+      ansible.builtin.stat: path=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+      register: tmp_dir
+
+    - name: copy deploy files
+      ansible.builtin.copy: src={{ item }} dest=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp
+      with_items:
+        - ~/{{ project_name }}/deploy/hotel_reservation/ansible/templates
+        - ~/{{ project_name }}/deploy/hotel_reservation/scripts
+      when: tmp_dir.stat.exists == False
+
+    - name: generate warm from template
+      template: src=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
+      with_items:
+         - { src: swarm.yml.j2, dest: swarm.yml }
+#         - { src: swarm-recommendation.yml.j2, dest: swarm-recommendation.yml }
+         - { src: swarm-search.yml.j2, dest: swarm-search.yml }
+
+    - name: generate config from template
+      template: src=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/templates/conf/{{ item.src }} dest=~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/templates/conf/{{ item.dest }}
+      with_items:
+         - { src: mongodb_geo.conf.j2, dest: mongodb_geo.conf }
+         - { src: mongodb_profile.conf.j2, dest: mongodb_profile.conf }
+         - { src: mongodb_rate.conf.j2, dest: mongodb_rate.conf }
+         - { src: mongodb_recommendation.conf.j2, dest: mongodb_recommendation.conf }
+         - { src: mongodb_reservation.conf.j2, dest: mongodb_reservation.conf }
+         - { src: mongodb_user.conf.j2, dest: mongodb_user.conf }
+
+
+- name: hotel_reservation benchmark
+  hosts: master
+  vars:
+    benchmark: hotel_reservation
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+
+  tasks:
+    - name: deploy media microservices benchmark use docker swarm
+      community.docker.docker_stack:
+        name: hr
+        state: present
+        compose:
+          - ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/swarm.yml
+
+    - name: wait for 30 seconds
+      ansible.builtin.wait_for:
+        timeout: 350
+    - name: create output dir
+      ansible.builtin.file:
+        path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output
+        state: directory
+
+    - name: recommendation {{ workload1 }}
+      shell:
+        cmd: >
+          wrk -D exp -t 1 -c 10 -d 60 -R {{ workload1 }} -L -s ./search.lua http://{{ entry_ip }}:5001
+          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/search.log 2>&1
+        chdir: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/scripts
+      async: 500
+      poll: 0
+      register: recommendation
+
+
+    - name: wait for recommendation finish
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: async_results
+      until: async_results.finished
+      retries: 20
+      delay: 30
+      with_items:
+        - "{{ recommendation }}"
+

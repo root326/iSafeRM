@@ -1,0 +1,128 @@
+version: "3"
+services:
+
+  frontend:
+    environment:
+      - TLS
+    image: igorrudyk1/hotel_reserv_frontend_single_node:latest
+    entrypoint: frontend
+    ports:
+      - "5000:5001"
+    depends_on:
+      - consul
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == aituningnode1
+      restart_policy:
+        condition: any
+      replicas: {{ frontend_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ frontend_cpus|default(0.4) }}"
+          memory: {{ frontend_memory|default(0.8) }}G
+
+  profile:
+    environment:
+      - TLS
+    image: igorrudyk1/hotel_reserv_profile_single_node:latest
+    entrypoint: profile
+    depends_on:
+      - mongodb-profile
+      - memcached-profile
+      - consul
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ profile_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ profile_cpus|default(0.4) }}"
+          memory: {{ profile_memory|default(0.8) }}G
+
+  recommendation:
+    environment:
+      - TLS
+    image: igorrudyk1/hotel_reserv_recommendation_single_node:latest
+    entrypoint: recommendation
+    depends_on:
+      - mongodb-recommendation
+      - consul
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ recommendation_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ recommendation_cpus|default(0.4) }}"
+          memory: {{ recommendation_memory|default(0.8) }}G
+
+
+
+  memcached-profile:
+    image: memcached:1.6
+    hostname: user-memcached
+    environment:
+      - MEMCACHED_CACHE_SIZE=128
+      - MEMCACHED_THREADS=2
+    logging:
+      options:
+        max-size: 50m
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ memcached_profile_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ memcached_profile_cpus|default(0.4) }}"
+          memory: {{ memcached_profile_memory|default(0.8) }}G
+    command:
+      -m {{ memcached_profile_m|default(64) }}
+      -n {{ memcached_profile_n|default(64) }}
+      -f {{ memcached_profile_f|default(1.25) }}
+      -c {{ memcached_profile_c|default(1024) }}
+      -t {{ memcached_profile_t|default(4) }}
+      -R {{ memcached_profile_R|default(24) }}
+      -r {{ memcached_profile_r|default(24) }}
+      -b {{ memcached_profile_b|default(1024) }}
+
+
+  mongodb-profile:
+    image: mongo:4.4
+    hostname: profile-db
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ mongodb_geo_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ mongodb_geo_cpus|default(0.4) }}"
+          memory: {{ mongodb_geo_memory|default(0.8) }}G
+    volumes:
+      - profile:/data/db
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/conf/mongodb_profile.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+  mongodb-recommendation:
+    image: mongo:4.4
+    hostname: recommendation-db
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: {{ mongodb_recommendation_replicas|default(1) }}
+      resources:
+        limits:
+          cpus: "{{ mongodb_recommendation_cpus|default(0.4) }}"
+          memory: {{ mongodb_recommendation_memory|default(0.8) }}G
+    volumes:
+      - recommendation:/data/db
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/conf/mongodb_recommendation.conf:/etc/mongodb.conf
+    command: mongod --config /etc/mongodb.conf
+
+volumes:
+  geo:
+  profile:
+  rate:
+  recommendation:
+  reservation:
+  user:

@@ -1,0 +1,24 @@
+- name: nginx benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    benchmark: nginx
+  tasks:
+    - name: clean up {{ benchmark }} benchmark
+      community.docker.docker_stack:
+        name: "{{ benchmark }}"
+        state: absent
+        absent_retries: 20
+        absent_retries_interval: 5
+
+
+
+- name: clean up tmp
+  hosts: all
+  vars:
+    benchmark: nginx
+  tasks:
+    - name: delete tmp
+      ansible.builtin.file:
+        path: ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+        state: absent

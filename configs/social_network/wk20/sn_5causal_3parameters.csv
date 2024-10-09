@@ -1,0 +1,17 @@
+microservice,type,parameter,categorical,discrete,float,range,step,default
+user-timeline-service,resource,resource,,1,,1;50,1,2
+user-timeline-service,resource,replicas,,1,,1;3,1,1
+write-home-timeline-service,resource,resource,,1,,1;50,1,2
+write-home-timeline-service,resource,replicas,,1,,1;3,1,1
+nginx-web-server,nginx,worker_processes,,1,,1;48,1,4
+nginx-web-server,nginx,threads,,1,,1;48,1,4
+nginx-web-server,nginx,worker_connections,,1,,32;4096,128,128
+nginx-web-server,resource,resource,,1,,1;50,1,2
+nginx-web-server,resource,replicas,,1,,1;1,1,1
+compose-post-service,resource,resource,,1,,1;50,1,2
+compose-post-service,resource,replicas,,1,,1;3,1,1
+compose-post-redis,redis,hz,,1,,10;100,10,100
+compose-post-redis,redis,maxmemory,,1,,100;10000,100,500
+compose-post-redis,redis,maxmemory-policy,1,,,volatile-lru;allkeys-lru;volatile-lfu;allkeys-lfu;volatile-random;allkeys-random;volatile-ttl;noeviction,1,noeviction
+compose-post-redis,resource,resource,,1,,1;50,1,2
+compose-post-redis,resource,replicas,,1,,1;3,1,1

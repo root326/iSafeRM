@@ -1,0 +1,70 @@
+---
+
+- name: prepare files
+  hosts: all
+  vars_files:
+    - "{{ conf_path }}"
+  vars:
+    benchmark: nginx
+
+  tasks:
+    - name: check if .tmp exists
+      ansible.builtin.stat: path=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      register: tmp_dir
+
+    - name: copy deploy files
+      ansible.builtin.copy: src={{ item }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp
+      with_items:
+        - ~/tuning_microservice/deploy/software/{{ benchmark }}/ansible/templates
+      when: tmp_dir.stat.exists == False
+
+    - name: generate config from template
+      template: src=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
+      with_items:
+         - { src: "{{ benchmark }}_swarm.yml.j2", dest: "{{ benchmark }}_swarm.yml" }
+         - { src: "{{ benchmark }}.conf.j2", dest: "{{ benchmark }}.conf" }
+
+
+
+- name: nginx benchmark
+  hosts: master
+  vars:
+    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    benchmark: nginx
+  tasks:
+
+    - name: deploy {{ benchmark }} benchmark use docker swarm
+      community.docker.docker_stack:
+        name: "{{ benchmark }}"
+        state: present
+        compose:
+          - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ benchmark }}_swarm.yml
+
+
+    - name: create output dir
+      ansible.builtin.file:
+        path: ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/output
+        state: directory
+
+    - name: wait for 30 seconds
+      ansible.builtin.wait_for:
+        timeout: 60
+
+    - name: wrk
+      shell:
+        cmd: wrk -D exp -t 2 -c 10 -d 60 -R 2000 -L http://{{ service_ip }}:{{ port }} > ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/output/wrk.log 2>&1
+        chdir: ~/tuning_microservice/deploy/wk/ycsb-0.17.0
+      async: 500
+      poll: 0
+      register: wrk
+
+
+    - name: wait for wrk
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: async_results
+      until: async_results.finished
+      retries: 10
+      delay: 30
+      with_items:
+        - "{{ wrk }}"

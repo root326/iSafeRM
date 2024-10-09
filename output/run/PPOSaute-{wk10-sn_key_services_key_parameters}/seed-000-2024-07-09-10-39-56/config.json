@@ -1,0 +1,96 @@
+{
+    "seed": 0,
+    "train_cfgs": {
+        "device": "cpu",
+        "torch_threads": 16,
+        "vector_env_nums": 1,
+        "parallel": 1,
+        "total_steps": 1024,
+        "epochs": 16
+    },
+    "algo_cfgs": {
+        "steps_per_epoch": 64,
+        "update_iters": 4,
+        "batch_size": 16,
+        "target_kl": 0.02,
+        "entropy_coef": 0.0,
+        "reward_normalize": false,
+        "cost_normalize": false,
+        "obs_normalize": true,
+        "kl_early_stop": true,
+        "use_max_grad_norm": true,
+        "max_grad_norm": 40.0,
+        "use_critic_norm": true,
+        "critic_norm_coef": 0.001,
+        "gamma": 0.99,
+        "cost_gamma": 0.99,
+        "lam": 0.95,
+        "lam_c": 0.95,
+        "clip": 0.2,
+        "adv_estimation_method": "gae",
+        "standardized_rew_adv": true,
+        "standardized_cost_adv": true,
+        "penalty_coef": 0.0,
+        "use_cost": false,
+        "safety_budget": 100,
+        "saute_gamma": 0.999,
+        "max_ep_len": 1000,
+        "unsafe_reward": -2.0
+    },
+    "logger_cfgs": {
+        "use_wandb": false,
+        "wandb_project": "omnisafe",
+        "use_tensorboard": true,
+        "save_model_freq": 1,
+        "log_dir": "/home/lilong/safescaler/output/run/",
+        "window_lens": 100
+    },
+    "model_cfgs": {
+        "weight_initialization_mode": "kaiming_uniform",
+        "actor_type": "gaussian_learning",
+        "linear_lr_decay": true,
+        "exploration_noise_anneal": false,
+        "std_range": [
+            0.5,
+            0.1
+        ],
+        "actor": {
+            "hidden_sizes": [
+                64,
+                64
+            ],
+            "activation": "tanh",
+            "lr": 0.0003
+        },
+        "critic": {
+            "hidden_sizes": [
+                64,
+                64
+            ],
+            "activation": "tanh",
+            "lr": 0.0003
+        }
+    },
+    "exp_increment_cfgs": {
+        "train_cfgs": {
+            "total_steps": 1024,
+            "vector_env_nums": 1,
+            "parallel": 1,
+            "torch_threads": 16
+        },
+        "algo_cfgs": {
+            "steps_per_epoch": 64,
+            "safety_budget": 100,
+            "update_iters": 4,
+            "batch_size": 16,
+            "unsafe_reward": -2.0
+        },
+        "logger_cfgs": {
+            "log_dir": "/home/lilong/safescaler/output/run/",
+            "save_model_freq": 1
+        }
+    },
+    "exp_name": "PPOSaute-{wk10-sn_key_services_key_parameters}",
+    "env_id": "wk10-sn_key_services_key_parameters",
+    "algo": "PPOSaute"
+}

@@ -1,0 +1,92 @@
+# my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets:
+{#          - "localhost:9090"#}
+          - {{ node_exporter_0|default("192.168.1.180:9100") }}
+          - {{ node_exporter_1|default("192.168.1.180:9100") }}
+          - {{ node_exporter_2|default("192.168.1.180:9100") }}
+{#          - {{ node_exporter_3|default("192.168.1.180:9100") }}#}
+
+{#          - "192.168.1.181:9100"#}
+{#          - "192.168.1.182:9100"#}
+{#          - "192.168.1.183:9100"#}
+#        - targets: ["localhost:9090","192.168.1.180:9100","192.168.1.181:9100","192.168.1.182:9100","192.168.1.183:9100","192.168.1.180:8216"]
+  - job_name: 'mongodb_exporter'
+    static_configs:
+      - targets:
+          - {{ mongodb_exporter|default("192.168.1.180:9216") }}
+        labels:
+          service: "mongodb_exporter"
+
+  - job_name: 'redis_exporter'
+    static_configs:
+      - targets:
+          - {{ redis_exporter|default("192.168.1.180:9121") }}
+        labels:
+          service: "redis_exporter"
+
+
+  - job_name: 'memcached_exporter'
+    static_configs:
+      - targets:
+          - {{ memcached_exporter|default("192.168.1.180:9150") }}
+        labels:
+          service: "memcached_exporter"
+
+  - job_name: 'nginx_exporter'
+    static_configs:
+      - targets:
+          - {{ nginx_exporter|default("192.168.1.180:9113") }}
+        labels:
+          service: "nginx_exporter"
+
+  - job_name: 'mysql_exporter'
+    static_configs:
+      - targets:
+          - {{ mysql_exporter|default("192.168.1.180:9104") }}
+        labels:
+          service: "mysql_exporter"
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets:
+          - {{ cadvisor_0|default("192.168.1.180:9105") }}
+          - {{ cadvisor_1|default("192.168.1.180:9105") }}
+          - {{ cadvisor_2|default("192.168.1.180:9105") }}
+{#          - {{ cadvisor_3|default("192.168.1.180:9105") }}#}
+
+        labels:
+          service: "cadvisor"
+
+  - job_name: 'elasticsearch_exporter'
+    static_configs:
+      - targets:
+          - {{ elasticsearch_exporter|default("192.168.1.237:9114") }}
+        labels:
+          service: "elasticsearch_exporter"

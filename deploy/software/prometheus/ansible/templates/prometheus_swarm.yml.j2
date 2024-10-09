@@ -1,0 +1,206 @@
+version: "3.8"
+services:
+  prometheus:
+    hostname: prometheus
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+    image: bitnami/prometheus:2.45.0
+    volumes:
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/prometheus.yml:/data/prometheus.yml
+    command: --config.file=/data/prometheus.yml
+
+
+  node-exporter:
+    hostname: node-exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9100
+        published: 9100
+        protocol: tcp
+        mode: host
+    image: bitnami/node-exporter:1.6.0
+
+  mongodb_exporter:
+    hostname: mongodb_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9216
+        published: 9216
+        protocol: tcp
+        mode: host
+    image: percona/mongodb_exporter:0.39.0
+    command: --mongodb.uri=mongodb://{{ mongodb_ip|default("192.168.1.182:27017") }}/test? --collect-all
+
+
+  redis_exporter:
+    hostname: redis_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9121
+        published: 9121
+        protocol: tcp
+        mode: host
+    image: oliver006/redis_exporter:v1.54.0
+    command: --redis.addr=redis://{{ redis_ip|default("192.168.1.180:6379") }} --include-system-metrics --redis-only-metrics
+
+  memcached_exporter:
+    hostname: memcached_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9150
+        published: 9150
+        protocol: tcp
+        mode: host
+    image: prom/memcached-exporter:v0.13.0
+    command: --memcached.address={{ memcached_ip|default("192.168.1.181:11211") }}
+
+
+  nginx_exporter:
+    hostname: nginx_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9113
+        published: 9113
+        protocol: tcp
+        mode: host
+    image: nginx/nginx-prometheus-exporter:0.11
+    command:
+      - -nginx.scrape-uri
+      - http://{{ nginx_ip|default("192.168.1.180:80") }}/stub_status
+
+  mysql_exporter:
+    hostname: mysql_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 0.6G
+    ports:
+      - target: 9104
+        published: 9104
+        protocol: tcp
+        mode: host
+    image: prom/mysqld-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: root:123456@({{ mysql_ip }})/ycsb
+    volumes:
+      - ~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/.my.cnf:/.my.cnf
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3
+{#      placement:#}
+{#        constraints:#}
+{#          - node.hostname == {{ deploy_host|default('master') }}#}
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    ports:
+      - target: 8080
+        published: 9105
+        protocol: tcp
+        mode: host
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+
+  elasticsearch_exporter:
+    hostname: elasticsearch_exporter
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == {{ deploy_host|default('master') }}
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    ports:
+      - target: 9114
+        published: 9114
+        protocol: tcp
+        mode: host
+    image: bitnami/elasticsearch-exporter:1.7.0
+    command:
+      - '--es.uri=http://192.168.1.237:9200'
+      - '--es.all'
+      - '--es.indices'
+      - '--es.indices_settings'
+      - '--es.indices_mappings'
+      - '--es.shards'
+      - '--es.timeout=30s'
