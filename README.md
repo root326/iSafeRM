@@ -1,31 +1,96 @@
-# SafeScaler
+# iSafeRM
+iSafeRM: An Interpretable and Safe Resource Management Framework for Microservice Systems with SLO Guarantees. 
 
-## 1. 工作流程
-
-1. 微服务运行过程中收集Jeager记录的trace数据，分析每一个span的运行延迟对端到端延迟的影响。我们将收集的trace数据根据SLO(200ms)标准分为正常数据与异常数据，利用因果推断与反事实推理，从正常数据分析因果机制，应用到异常数据中，找到每一个span对端到端延迟的因果贡献，并排序输出异常根因服务
-2. 找到需要调整的服务后，为每一个服务选择合适的配置参数，形成一个配置空间，准备探索
-3. 利用安全强化学习探索配置空间找到最优配置
+<font style="color:rgb(31, 35, 40);">This repository contains codes for a research paper that was submitted for publication at the 2024 WWW.</font>
 
 
 
-## 2. 项目结构
+# Introduction
+Considering the dynamic workloads and the complex interactions among different services, it is difficult to figure out the accurate relationship between the user-facing quality of service and the available computing resource of each interior microservice. As a result, ISPs usually have to assign excessive resources to each microservice to avoid the possible end-to-end service-level objective (SLO) violations, which leads to the unnecessary waste of computing resources and consequently, additional cloud service expenses.
 
-1. .tmp文件夹用于存放微服务部署时的文件，部署过程中必要的配置文件、volumes等等会放入其中，服务删除后会自动清空
-2. configs文件夹存放微服务调优所需要的一些静态的配置文件，csv格式，SafeScaler可以通过加载csv文件中的数据获取所需调整的参数
-3. data文件夹下两个子目录，rca存放了一些历史捕获的trace数据，构建好的因果图，以及输出结果的根因服务json文件。replay下存放了不同配置下的运行数据，用于离线运行进行加载，不再在线部署获取数据。
-4. deploy文件夹下存放微服务的一些部署文件，以ansible文件为主，在线部署时，会利用ansible执行任务。
-5. output文件夹用于存放系统运行的输出结果
-6. tuning文件夹存放SafeScaler具体的一些代码，包括指标采集，根因定位，强化学习。具体运行看safescaler.py
+We present an interpretable and safe resource management framework called **iSafeRM** for microservice-based systems, which is able to automatically locate the bottleneck services for current SLO violation and conduct a safe online configuration of both computing resources and performance-critical parameters. Specifically, iSafeRM consists of three major modules: PBSLocator, PCPIdenter and SafeConfigor. 
 
-## 3. 离线运行
 
-1. 由于离线运行只是加载收集的历史数据，在data/replay中存放了工作负载rps为10的环境下，safescaler的运行数据。启动时系统会加载csv中的数据，最终给出一个在历史数据上跑出的最优配置，存放于output/result/best.yml。result下的文件夹存放safescaler运行时的历史数据。
-2. 关于根因定位，收集的历史数据存放于data/rca中,ms_data.csv是收集的trace数据，离线运行根因定位会加载其中的数据并给出结果放入top_services.json。由于根因定位根据采集的数据量与trace的大小会影响运行时间，所以方便起见可以直接拿准备好的top_services.json使用。
-3. 此外，离线默认加载congfigs下的csv文件作为配置空间，所以csv中的数据可能会与top_services.json中的服务不同。
 
-## 4. 在线运行
+# Environment
++ Hardware requirement
+    - A cluster with 3 CPU servers or more
+    - CPU: Intel(R) Xeon(R) Gold 5118 CPU @ 2.30GHz
+    - DRAM: 64 GB for each server or more
++ Software requirement
+    - Ubuntu 20.04 LTS 
+    - Docker 20.10.7 
+    - Python 3.9
+    - YCSB
+    - Wrk
+    - benchmark: DeathStarBench
 
-1. 在线运行默认不打开，需要导入microservices_env中的MicroservicesENV环境。
-2. 在线运行一般先部署服务，根因定位，再加载信息进行训练，在safescaler.py中有具体步骤，当根因定位将服务写入top_services.json中后，在线运行会加载其中的服务并匹配配置参数形成配置空间，进行探索。在文件中默认没启动rca，直接选择已写好的top_services.json启动。
-3. 定位与调优功能是分离的，因此在线运行也可以选择congfigs下的csv文件作为配置空间，具体可参考MicroservicesENVOffline中的配置初始化函数。
+# PBSLocator
+When a SLO violation is detected for current user request, PBSLocator extracts the service call relationships from the latest tracing data and inverts the pointing relationship to obtain the corresponding request-level causal graph. After that, it leverages the functional causal model to perform efficient counterfactual inference to locate the bottleneck services.
+
+
+
+1. You can find the code in the tuning/PBSLocator directory and run it as follows
+
+```shell
+cd iSafeRM
+make run-run-exp-find-key-services-sn
+```
+
+2. Or you can start by collecting microservice traces and then use rca.py to locate the bottleneck service.
+
+```python
+from tunning.datacollector.trace_collector import TraceCollector
+data_collector = TraceCollector(
+            bench_name=self._benchmark,
+            resultPath=self._result_path / 'trace',
+        )
+data_collector.collect_ms_data(start_time=start_time)
+ms_data = data_collector.get_ms_data_csv()
+
+# By parsing microservice traces, you get a latency csv file and a causal graph
+
+from tunning.PBSLocator.rca import compute_causal_services
+
+top_services = compute_causal_services(csv,graph)
+
+```
+
+
+
+# PCPIdenter
+PCPIdenter is responsible for identifying the inherent performance-critical parameters of complex bottleneck services such as databases under current workload characteristics. 
+
+1. You can find the code in the tuning/PCPIdenter directory and run with jupyter
+2. In the folder we have collected some offline data for identifying the key parameters of the database. You can collect the data in your own environment in the following ways
+
+```shell
+cd iSafeRM
+make run-redis
+```
+
+3. Note that collecting the data requires deploying some monitoring software, such as Prometheus, exporter. You can deploy it as follows
+
+```shell
+cd iSafeRM
+make run-prometheus
+```
+
+More details are put in the Makefile and the relevant deployment files are in the deploy folder.
+
+# SafeConfigor
+SafeConfigor explores the configuration space consists of the inherent performance-critical parameters as well as the instance specification and instance number in an online manner.
+
+1. You can find the code in the tuning/benchenvs directory and run it as follows
+
+```shell
+cd iSafeRM
+make run-rl-sn
+```
+
+2. This module can be used on its own, as long as you have a csv configuration file with microservice parameters.
+    - Csv file like sn_5causal_3parameters.csv in iSafeRM/configs
+    - The environment code for RL is in microservices_env.py
+
+
 
