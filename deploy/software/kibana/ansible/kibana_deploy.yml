@@ -3,8 +3,6 @@
 - name: prepare files
   hosts: all
   vars_files:
-#    - "{{ conf_path }}"
-#    - "~/tuning_microservice/tests/test_conf.yml"
   vars:
     benchmark: kibana
   tasks:
@@ -28,7 +26,7 @@
 - name: prometheus benchmark
   hosts: master
   vars:
-    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    ansible_python_interpreter: /home/XXXX-1/miniconda3/envs/mytunning/bin/python
     benchmark: kibana
   tasks:
 

@@ -1,28 +1,4 @@
---
--- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements. See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership. The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"); you may not use this file except in compliance
--- with the License. You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied. See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
-
----- namespace thrift
---thrift = {}
---setmetatable(thrift, {__index = _G}) --> perf hit for accessing global methods
---setfenv(1, thrift)
-
-package.cpath = package.cpath .. ';bin/?.so' -- TODO FIX
+package.cpath = package.cpath .. ';bin/?.so'
 local function ttype(obj)
   if type(obj) == 'table' and
     obj.__type and
@@ -77,7 +53,6 @@ local TMessageType = {
   ONEWAY = 4
 }
 
--- Recursive __index function to achieve inheritance
 local function __tobj_index(self, key)
   local v = rawget(self, key)
   if v ~= nil then
@@ -92,7 +67,6 @@ local function __tobj_index(self, key)
   return nil
 end
 
--- Basic Thrift-Lua Object
 local __TObject = {
   __type = '__TObject',
   __mt = {
@@ -105,13 +79,11 @@ function __TObject:new(init_obj)
     obj = init_obj
   end
 
-  -- Use the __parent key and the __index function to achieve inheritance
   obj.__parent = self
   setmetatable(obj, __TObject.__mt)
   return obj
 end
 
--- Return a string representation of any lua variable
 local function thrift_print_r(t)
   local ret = ''
   local ltype = type(t)
@@ -129,7 +101,6 @@ local function thrift_print_r(t)
   return ret
 end
 
--- Basic Exception
 local TException = __TObject:new{
   message,
   errorCode,
@@ -149,7 +120,6 @@ function TException:__tostring()
   end
 end
 
--- Thrift[5]
 local TApplicationException = TException:new{
   UNKNOWN                 = 0,
   UNKNOWN_METHOD          = 1,
@@ -234,7 +204,6 @@ function TException:write(oprot)
   oprot:writeStructEnd()
 end
 
--- Basic Client (used in generated lua code)
 local __TClient = __TObject:new{
   __type = '__TClient',
   _seqid = 0
@@ -244,7 +213,6 @@ function __TClient:new(obj)
     error('TClient must be initialized with a table')
   end
 
-  -- Set iprot & oprot
   if obj.protocol then
     obj.iprot = obj.protocol
     obj.oprot = obj.protocol
@@ -264,7 +232,6 @@ function __TClient:close()
   self.oprot.trans:close()
 end
 
--- Basic Processor (used in generated lua code)
 local __TProcessor = __TObject:new{
   __type = '__TProcessor'
 }
@@ -273,7 +240,6 @@ function __TProcessor:new(obj)
     error('TProcessor must be initialized with a table')
   end
 
-  -- Ensure a handler is provided
   if not obj.handler then
     error('You must provide ' .. ttype(self) .. ' with a handler')
   end

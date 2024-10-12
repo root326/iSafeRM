@@ -17,7 +17,6 @@ import re
 import argparse
 
 current_file_path = os.path.abspath(__file__)
-# tuning_folder = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
 tuning_folder = f"{GLOBAL_CONFIG['project_root_dir']}"
 
 @env_register
@@ -39,7 +38,6 @@ class MicroservicesENVOffline(CMDP):
         self._csv_path = BENCHMARK_CONFIG['microservices'][self.benchmark][
                              'configs_dir'] / f"{env_dir}" / f"{self._env_id.split('-')[1]}.csv"
         self._replay_path = Path(tuning_folder + '/data/replay/replay.csv')
-        # self._result_path = Path(tuning_folder + '/output/result/')
         self._result_path = Path(tuning_folder + '/output/results/offline/' + f"iSafeRM-{time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())}-{self._env_id}")
 
         self._slo = BENCHMARK_CONFIG['microservices'][self.benchmark]['slo']
@@ -53,8 +51,6 @@ class MicroservicesENVOffline(CMDP):
         results_summary_file = pd.DataFrame(columns=GLOBAL_CONFIG['result_file_column'])
         results_summary_file.to_csv(self._results_summary_file, index=False)
 
-        # self._result_file = Path(tuning_folder + '/output/result') / f"_results_summary.csv"
-        # results_summary_file.to_csv(self._result_file)
 
         self._act_dim = len(self._config_dict)
         self._obs_dim = len(self._key_services) * 2 + len(self._workload) + 1 + 1
@@ -78,17 +74,15 @@ class MicroservicesENVOffline(CMDP):
         self._last_safe_obs = []
         self._last_safe_conf_dict = {}
         self._best_value = float('inf')
-        # self._init_env()
+
 
     def record_optimal_value(self,value):
-        # latency
         if self._best_value > value:
             self._best_value = value
             copy_and_rename_file(self._conf_path, Path(tuning_folder + f'/output/results/offline/'), 'best.yml')
 
     def get_bench_name(self):
         bench = self._env_id.split('-')[1].split('_')[0]
-        # print(self._namespace)
         if bench == 'sn':
             return 'social_network', bench
         if bench == 'mm':
@@ -99,7 +93,6 @@ class MicroservicesENVOffline(CMDP):
             return 'hotel_reservation', bench
 
     def _init_env(self):
-        # self._bench.cleanup(self._task_id)
 
         obs, _, _, _, _, info = self.run_config()
         self._init_obs = obs
@@ -110,24 +103,20 @@ class MicroservicesENVOffline(CMDP):
         replay_csv = pd.read_csv(self._replay_path)
         if replay_csv.shape[0] == 0:
             return False, 0, 0, []
-        # conf_vector = result_csv['conf'].tolist()
         conf_vector_list = []
         for index, row in replay_csv.iterrows():
             conf = []
             tmp = []
             obs = []
-            # for i in row['observation'].split(';'):
             for i in row['conf'].split(';'):
                 conf.append(float(i))
             for i in row['observation'].split(';'):
-                # for i in row['conf'].split(';'):
                 obs.append(float(i))
             tmp.append(conf)
             tmp.append(float(row['latency']))
             tmp.append(float(row['resource']))
             tmp.append(obs)
             conf_vector_list.append(tmp)
-        # similarity = []
         max_similarity = 0
         latency = 0
         resource = self.get_resource()
@@ -138,7 +127,6 @@ class MicroservicesENVOffline(CMDP):
             if cosine_similarity > max_similarity:
                 max_similarity = cosine_similarity
                 latency = vector[1]
-                # resource = vector[2]
                 observation = vector[3]
 
         new_obs = []
@@ -153,7 +141,6 @@ class MicroservicesENVOffline(CMDP):
         return True, latency, resource, new_obs
 
     def get_conf_vector(self):
-        # 得到每次配置的值，用于相似度计算
         conf_vector = []
         for k, v in self._config_dict.items():
             conf_vector.append(v['value'])
@@ -177,7 +164,6 @@ class MicroservicesENVOffline(CMDP):
         return performance
 
     def get_cost(self):
-        # 默认预算是100，当延迟第一次超过100的时候才开始消耗安全代价
         if self._curr_latency <= self._slo - 100:
             return 0
         if self._cost_flag:
@@ -197,7 +183,6 @@ class MicroservicesENVOffline(CMDP):
         terminated = False
         truncated = False
         info = {}
-        # 相似度计算，减少开销
         curr_conf_vector = self.get_conf_vector()
         self._replay, latency, resource, observation = self.compute_similarity(curr_conf_vector)
         if latency < self._slo * 0.5:
@@ -213,13 +198,8 @@ class MicroservicesENVOffline(CMDP):
         result_temp['workload'] = [';'.join([str(x) for x in self._workload])]
         conf_vector = self.get_conf_vector()
         result_temp['conf'] = [';'.join([str(x) for x in conf_vector])]
-        result_data = pd.DataFrame(result_temp)  # a需要是字典格式
-        # mode='a'表示追加, index=True表示给每行数据加索引序号, header=False表示不加标题
+        result_data = pd.DataFrame(result_temp)
         result_data.to_csv(self._results_summary_file, mode='a', index=False, header=False)
-        # 外部
-        # result_data.to_csv(self._result_file, mode='a', index=False, header=False)
-
-        # result_data.to_csv(self._replay_path, mode='a', index=False, header=False)
         self._task_id += 1
         self._pre_latency = latency
         self._pre_resource = resource
@@ -268,22 +248,18 @@ class MicroservicesENVOffline(CMDP):
             else:
                 coefficient = 0
             if v['type'] == 'categorical':
-                # index = int(action[i] / (1 / len(v['range_list'])))
                 index = int(v['value'] + v['step'] * coefficient)
                 if index < 0 or index >= len(v['range_list']):
                     curr_conf[k] = v['range_list'][0]
                 else:
                     curr_conf[k] = v['range_list'][index]
                 self._config_dict[k]['value'] = index
-                # curr_config_dict[k] = curr_conf[k]
             elif v['type'] == 'discrete':
                 curr_conf[k] = int(v['value'] + v['step'] * coefficient)
                 if curr_conf[k] < v['min']:
                     curr_conf[k] = round(int(v['min']), 1)
                 if curr_conf[k] > v['max']:
                     curr_conf[k] = round(int(v['max']), 1)
-                # if 'nginx' in k and 'replicas' in k:
-                #     curr_conf[k] = 1
                 if 'resource' in k:
                     prefix = k.split('resource')[0]
                     if self._namespace == 'tt':
@@ -298,7 +274,6 @@ class MicroservicesENVOffline(CMDP):
                     curr_conf[k] = round(float(v['min']), 1)
                 if curr_conf[k] > v['max']:
                     curr_conf[k] = round(float(v['max']), 1)
-                # 更新记录的参数值
                 self._config_dict[k]['value'] = curr_conf[k]
             i += 1
         return curr_conf
@@ -347,7 +322,6 @@ class MicroservicesENVOffline(CMDP):
         return torch.as_tensor(obs, dtype=torch.float32, device=self._device), {}
 
     def set_seed(self, seed: int) -> None:
-        # self.reset()
         pass
 
     def sample_action(self) -> torch.Tensor:

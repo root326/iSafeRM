@@ -1,7 +1,4 @@
---
-----Author: xiajun
-----Date: 20151020
-----
+
 local TSocket = require "TSocket"
 local TSocketSSL = require "TSocketSSL"
 local TFramedTransport = require "TFramedTransport"
@@ -12,7 +9,6 @@ local RpcClient = Object:new({
 	__type = 'RpcClient',
 })
 
---初始化RPC连接
 function RpcClient:init(ip,port,timeout,ssl)
 	if (ssl == true) then
 		socket = TSocketSSL:new{
@@ -35,7 +31,6 @@ function RpcClient:init(ip,port,timeout,ssl)
 	transport:open()
 	return protocol;
 end
---创建RPC客户端
 function RpcClient:createClient(thriftClient)end
 
 return RpcClient

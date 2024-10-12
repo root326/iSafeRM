@@ -1,7 +1,3 @@
---
-----Author: xiajun
-----Date: 20151120
-----
 local function ttype(obj)
     if type(obj) == 'table' and obj.__type and type(obj.__type) == 'string' then
         return obj.__type

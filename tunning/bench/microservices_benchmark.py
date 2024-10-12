@@ -30,10 +30,6 @@ class MicroservicesBenchmark:
         conf_path = str(conf_path)
         playbook_deploy = ''
         playbook_deploy = str(self.playbook_deploy)
-        # if task_id == 0:
-        #     playbook_deploy = str(self.playbook_deploy)
-        # else:
-        #     playbook_deploy = str(self.playbook_deploy_key_services)
 
         workload1 = int(workload[0])
         cmd = [
@@ -43,18 +39,13 @@ class MicroservicesBenchmark:
         ]
         try:
             subprocess.run(
-                cmd, check=True  # , stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                cmd, check=True
             )
-            # subprocess.run(cmd)
         except subprocess.CalledProcessError as e:
             raise BenchException(" benchmark deploy failed") from e
 
     def cleanup(self, task_id):
         playbook_clean = str(self.playbook_clean)
-        # if task_id == 0:
-        #     playbook_clean = str(self.playbook_clean)
-        # else:
-        #     playbook_clean = str(self.playbook_clean_key_services)
         cmd = [
             "ansible-playbook",
             playbook_clean,
@@ -62,7 +53,7 @@ class MicroservicesBenchmark:
         ]
         try:
             subprocess.run(
-                cmd, check=True  # , stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                cmd, check=True
             )
         except subprocess.CalledProcessError as e:
             raise BenchException(" benchmark clean failed") from e
@@ -74,8 +65,6 @@ class MicroservicesBenchmark:
 
     def _parse_latency(self) -> float:
         log = self.out_put / self.bench_log
-        # 这里匹配99.000%（空格）数字字符，如 99.000%    2.75m
-        # p95_re = re.compile(r"(\d+.+)\s+0\.950000\s+(\d+.+)")
         p95_re = re.compile(fr"(\d+.+)\s+0\.{self.p_latency}\s+(\d+.+)")
         content = log.read_text()
         match = p95_re.search(content)
@@ -89,19 +78,3 @@ class MicroservicesBenchmark:
 
         os.system(
             f"bash {self.workload_sh} {self.entry_ip} {workload} ")
-        # workload = ['composepost.sh','read_user_timeline.sh','read_home_timeline.sh']
-        # scripts = ['composepost.sh']
-        # for script in scripts:
-        #     for wk in workload:
-        #         try:
-        #             cmd = [
-        #                 'bash',
-        #                 f'/home/lilong/tuning_microservice/deploy/social_network/workload/{script}',
-        #                 f"{self.entry_ip}",
-        #                 f"{wk}",
-        #             ]
-        #             subprocess.run(
-        #                     cmd, check=True
-        #                 )
-        #         except subprocess.CalledProcessError as e:
-        #             raise BenchException("Social network workload run failed") from e

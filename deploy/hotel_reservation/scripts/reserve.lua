@@ -38,7 +38,7 @@ local function reserve()
     "&hotelId=" .. hotel_id .. "&customerName=" .. cust_name .. "&username=" .. user_id ..
     "&password=" .. password .. "&number=" .. num_room
   local headers = {}
-  -- headers["Content-Type"] = "application/x-www-form-urlencoded"
+
   return wrk.format(method, path, headers, nil)
 end
 

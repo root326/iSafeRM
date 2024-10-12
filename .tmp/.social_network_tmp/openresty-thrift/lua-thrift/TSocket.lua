@@ -1,20 +1,3 @@
----- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements. See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership. The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"); you may not use this file except in compliance
--- with the License. You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied. See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
 
 local TTransport = require 'TTransport'
 local TTransportException = TTransport.TTransportException
@@ -23,7 +6,6 @@ local Thrift = require 'Thrift'
 local ttype = Thrift.ttype
 local terror = Thrift.terror
 
--- TSocketBase
 local TSocketBase = TTransportBase:new{
   __type = 'TSocketBase',
   timeout = 10000,
@@ -45,7 +27,6 @@ function TSocketBase:setKeepAlive(timeout, size)
   end
 end
 
--- Returns a table with the fields host and port
 function TSocketBase:getSocketInfo()
   if self.handle then
     return self.handle:getsockinfo()
@@ -62,7 +43,6 @@ function TSocketBase:setTimeout(timeout)
   end
 end
 
--- TSocket
 local TSocket = TSocketBase:new{
   __type = 'TSocket',
   host = 'localhost',
@@ -78,7 +58,6 @@ end
 
 function TSocket:open()
   if not self.handle then
-    -- Use NGINX socket instead of the built-in lua socket
     self.handle = ngx.socket.tcp()
     self.handle:settimeout(self.timeout)
   end
@@ -106,7 +85,6 @@ end
 function TSocket:flush()
 end
 
--- TServerSocket
 local TServerSocket = TSocketBase:new{
   __type = 'TServerSocket',
   host = 'localhost',

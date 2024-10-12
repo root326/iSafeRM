@@ -1,21 +1,4 @@
---
--- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements. See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership. The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"); you may not use this file except in compliance
--- with the License. You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied. See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
+
 
 local TProtocol = require 'TProtocol'
 local libluabpack = require 'libluabpack'
@@ -40,20 +23,15 @@ local TCompactProtocol = __TObject.new(TProtocolBase, {
   COMPACT_TYPE_BITS         = 0x07,
   COMPACT_TYPE_SHIFT_AMOUNT = 5,
 
-  -- Used to keep track of the last field for the current and previous structs,
-  -- so we can do the delta stuff.
   lastField = {},
   lastFieldId = 0,
   lastFieldIndex = 1,
 
-  -- If we encounter a boolean field begin, save the TField here so it can
-  -- have the value incorporated.
   booleanFieldName    = "",
   booleanFieldId      = 0,
   booleanFieldPending = false,
 
-  -- If we read a field header, and it's a boolean field, save the boolean
-  -- value here so that readBool can use it.
+
   boolValue          = false,
   boolValueIsNotNull = false,
 })
@@ -217,12 +195,10 @@ function TCompactProtocol:writeDouble(dub)
 end
 
 function TCompactProtocol:writeString(str)
-  -- Should be utf-8
   self:writeBinary(str)
 end
 
 function TCompactProtocol:writeBinary(str)
-  -- Should be utf-8
   self:writeVarint32(string.len(str))
   self.trans:write(str)
 end
@@ -251,13 +227,11 @@ function TCompactProtocol:writeCollectionBegin(etype, size)
 end
 
 function TCompactProtocol:writeVarint32(i32)
-  -- Should be utf-8
   local str = libluabpack.toVarint32(i32)
   self.trans:write(str)
 end
 
 function TCompactProtocol:writeVarint64(i64)
-  -- Should be utf-8
   local str = libluabpack.toVarint64(i64)
   self.trans:write(str)
 end
@@ -302,7 +276,6 @@ function TCompactProtocol:readFieldBegin()
   if ttype == TType.STOP then
     return nil, ttype, 0
   end
-  -- mask off the 4 MSB of the type header. it could contain a field id delta.
   local modifier = libluabitwise.shiftr(libluabitwise.band(field_and_ttype, 0xf0), 4)
   local id = 0
   if modifier == 0 then
@@ -454,7 +427,6 @@ local TCompactProtocolFactory = TProtocolFactory:new{
 }
 
 function TCompactProtocolFactory:getProtocol(trans)
-  -- TODO Enforce that this must be a transport class (ie not a bool)
   if not trans then
     terror(TProtocolException:new{
       message = 'Must supply a transport to ' .. ttype(self)

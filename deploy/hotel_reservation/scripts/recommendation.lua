@@ -16,7 +16,6 @@ local function recommend()
   local path = "http://localhost:5000/recommendations?require=" .. req_param ..
     "&lat=" .. tostring(lat) .. "&lon=" .. tostring(lon)
   local headers = {}
-  -- headers["Content-Type"] = "application/x-www-form-urlencoded"
   return wrk.format(method, path, headers, nil)
 end
 

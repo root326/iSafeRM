@@ -1,22 +1,3 @@
-//
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements. See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership. The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License. You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations
-// under the License.
-//
-
 #include <sys/time.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -26,16 +7,11 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <stdio.h> // TODO REMOVE
+#include <stdio.h>
 
 #include "socket.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// Private
-
-// Num seconds since Jan 1 1970 (UTC)
 #ifdef _WIN32
-// SOL
 #else
   double __gettime() {
     struct timeval v;
@@ -61,7 +37,6 @@ T_ERRCODE socket_wait(p_socket sock, int mode, int timeout) {
     FD_ZERO(&rfds);
     FD_ZERO(&wfds);
 
-    // Specify what I/O operations we care about
     if (mode & WAIT_MODE_R) {
       FD_SET(*sock, &rfds);
     }
@@ -69,13 +44,11 @@ T_ERRCODE socket_wait(p_socket sock, int mode, int timeout) {
       FD_SET(*sock, &wfds);
     }
 
-    // Check for timeout
     t = end - __gettime();
     if (t < 0.0) {
       break;
     }
 
-    // Wait
     tv.tv_sec = (int)t;
     tv.tv_usec = (int)((t - tv.tv_sec) * 1.0e6);
     ret = select(*sock+1, &rfds, &wfds, NULL, &tv);
@@ -84,12 +57,10 @@ T_ERRCODE socket_wait(p_socket sock, int mode, int timeout) {
     return errno;
   }
 
-  // Check for timeout
   if (ret == 0) {
     return TIMEOUT;
   }
 
-  // Verify that we can actually read from the remote host
   if (mode & WAIT_MODE_C && FD_ISSET(*sock, &rfds) &&
       recv(*sock, (char*) &rfds, 0, 0) != 0) {
     return errno;
@@ -98,8 +69,6 @@ T_ERRCODE socket_wait(p_socket sock, int mode, int timeout) {
   return SUCCESS;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// General
 
 T_ERRCODE socket_create(p_socket sock, int domain, int type, int protocol) {
   *sock = socket(domain, type, protocol);
@@ -156,9 +125,6 @@ T_ERRCODE socket_get_info(p_socket sock, short *port, char *buf, size_t len) {
   return errno;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Server
-
 T_ERRCODE socket_accept(p_socket sock, p_socket client,
                   p_sa addr, socklen_t *addrlen, int timeout) {
   int err;
@@ -191,8 +157,6 @@ T_ERRCODE socket_listen(p_socket sock, int backlog) {
   return ret == SUCCESS ? ret2 : ret;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Client
 
 T_ERRCODE socket_connect(p_socket sock, p_sa addr, int addr_len, int timeout) {
   int err;
@@ -247,7 +211,6 @@ T_ERRCODE socket_recv(
     }
     err = errno;
 
-    // Connection has been closed by peer
     if (got == 0) {
       return CLOSED;
     }
@@ -260,8 +223,6 @@ T_ERRCODE socket_recv(
   return err;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Util
 
 T_ERRCODE socket_setnonblocking(p_socket sock) {
   int flags = fcntl(*sock, F_GETFL, 0);
@@ -274,9 +235,6 @@ T_ERRCODE socket_setblocking(p_socket sock) {
   flags &= (~(O_NONBLOCK));
   return fcntl(*sock, F_SETFL, flags) != -1 ? SUCCESS : errno;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// TCP
 
 #define ERRORSTR_RETURN(err) \
   if (err == SUCCESS) { \

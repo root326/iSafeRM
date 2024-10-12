@@ -40,7 +40,7 @@
   hosts: master
   vars:
     benchmark: hotel_reservation
-    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    ansible_python_interpreter: /home/XXXX-1/miniconda3/envs/mytunning/bin/python
 
   tasks:
     - name: deploy media microservices benchmark use docker swarm

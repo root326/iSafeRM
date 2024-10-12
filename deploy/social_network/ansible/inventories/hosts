@@ -1,9 +1,6 @@
-# sample inventory file for ansible
-# copy contents in this file to /etc/ansible/hosts
-
 [node]
-wyl2    ansible_connection=ssh  ansible_user=lilong
-wyl3    ansible_connection=ssh  ansible_user=lilong
+wyl2    ansible_connection=ssh  ansible_user=XXXX-1
+wyl3    ansible_connection=ssh  ansible_user=XXXX-1
 
 [master]
-wyl1   ansible_connection=ssh  ansible_user=lilong
+wyl1   ansible_connection=ssh  ansible_user=XXXX-1

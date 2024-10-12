@@ -17,10 +17,8 @@ current_file_path = os.path.abspath(__file__)
 tuning_folder = os.path.dirname(os.path.dirname(current_file_path))
 
 my_logger = logging.Logger("file_logger")
-# current_path = os.getcwd()
-# parent_path = o
+
 log_file = Path(f"{tuning_folder}/output/log/{time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())}.log")
-# log_file = os.path.join(current_path, log_file)
 if Path(log_file).exists():
     os.remove(log_file)
 my_handler = logging.FileHandler(log_file, encoding='utf-8')
@@ -28,7 +26,6 @@ my_handler = logging.FileHandler(log_file, encoding='utf-8')
 my_handler.setLevel(logging.INFO)
 my_format = logging.Formatter("log time: %(asctime)s level: %(levelname)s message: %(message)s line: %(lineno)d")
 
-# 把handler添加到对应的logger中去。
 my_handler.setFormatter(my_format)
 my_logger.addHandler(my_handler)
 
@@ -72,12 +69,7 @@ def result2json(result_dir, iteration):
     for i in range(iteration + 1):
         file_name = result_dir / f"{i}_conf.yml"
         with open(file_name, "r") as file:
-            # content = file.read()
-            # content = content.replace('\n', '')
             yml_obj = yaml.safe_load(file)
-            # json_str = json.dumps(yml_obj)
-            # content = file.read()
-            # print(yml_obj)
             conf_dict[f"{i}_conf.yml"] = yml_obj
     res_json["conf_result"] = conf_dict
     res_sum_file = result_dir / "_results_summary.txt"
@@ -89,10 +81,6 @@ def result2json(result_dir, iteration):
             match_latency = latency.search(line)
             match_resource = resource.search(line)
             match_task = task_id.search(line)
-            # content = res_sum_file.read_text()
-            # print(match_latency.group(1))
-            # print(match_resource.group(1))
-            # print(match_task.group(0))
             task = {"latency": float(match_latency.group(1)), "resource": float(match_resource.group(1))}
             task_dict[match_task.group(0)] = task
     res_json["task_result"] = task_dict
@@ -111,8 +99,6 @@ def fetch_prometheus(
     request_data = {
         "query": prometheus_query,
     }
-    # request_data["query"] = "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode='idle'}[5m])) * 100) "
-    # query = f'instance:node_cpu_utilisation:rate1m{{instance=~"{".*|".join(nodes)}.*"}}'
 
     if query_type == "range":
         request_data["step"] = step
@@ -120,7 +106,6 @@ def fetch_prometheus(
         request_data["end"] = end_time
     elif query_type == "point":
         request_data["time"] = time
-    # print(time)
     url_suffix = {"range": "query_range", "point": "query"}[query_type]
     res = requests.get(f"{host}/api/v1/{url_suffix}", params=request_data)
     return res
@@ -129,9 +114,7 @@ def fetch_prometheus(
 def get_prometheus_response_value(res):
     res_list = []
     for i in range(len(res['data']['result'])):
-        # print(res['data']['result'][i])
         res_list.append(round(float(res['data']['result'][i]['value'][1]), 2))
-    # print(res_list)
     return res_list
 
 
@@ -139,7 +122,6 @@ def get_node_cpu_usage(host: str = GLOBAL_CONFIG['prometheus_host'],
                        time_interval: int = 5,
                        job_name: str = "prometheus"):
     query = f"(1 - avg(irate(node_cpu_seconds_total{{job='{job_name}',mode='idle'}}[{time_interval}m]))by(instance))*100"
-    # print(query)
     return get_prometheus_response_value(fetch_prometheus(host, query, "point").json())
 
 
@@ -150,25 +132,20 @@ def get_node_memory_usage(host: str = GLOBAL_CONFIG['prometheus_host'],
             f"+ avg_over_time(node_memory_Cached_bytes{{job='{job_name}'}}[{time_interval}m]) " \
             f"+ avg_over_time(node_memory_Buffers_bytes{{job='{job_name}'}}[{time_interval}m])) " \
             f"/ avg_over_time(node_memory_MemTotal_bytes{{job='{job_name}'}}[{time_interval}m])))"
-    # print(fetch_prometheus(host, query, "point").json())
     return get_prometheus_response_value(fetch_prometheus(host, query, "point").json())
 
 
 def get_prometheus_response_container_value(res):
-    # print(res)
     res_list = []
     for i in range(len(res['data']['result'])):
-        # print(res['data']['result'][i])
         tmp = {}
         tmp['container_name'] = res['data']['result'][i]['metric']['name']
         tmp['container_value'] = round(float(res['data']['result'][i]['values'][0][1]), 2)
         res_list.append(tmp)
-    # print(res_list)
     value_list = []
     for v in res_list:
         value_list.append(v['container_value'])
     return round(sum(value_list) / len(value_list), 2)
-    # return res_list
 
 
 def get_svc_count(svcs):
@@ -183,15 +160,10 @@ def get_container_svc_count(host: str = GLOBAL_CONFIG['prometheus_host'],
                             end_time=None,
                             service_name: str = ''):
     query = f"count(container_memory_usage_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}})"
-    # print(query)
     res_cpu = []
-    # res_cpu = fetch_prometheus(host, query, "point").json()
-    # print(res_cpu)
     count = 1
     while count > 0:
         res_cpu = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # res_cpu = fetch_prometheus(host, query, "point").json()
-        # print(res_cpu)
         if len(res_cpu['data']['result']) != 0:
             break
         time.sleep(2)
@@ -207,15 +179,10 @@ def get_container_cpu_limit(host: str = GLOBAL_CONFIG['prometheus_host'],
                             end_time=None,
                             service_name: str = ''):
     query = f"container_spec_cpu_quota{{container_label_com_docker_swarm_service_name='{service_name}'}} /100000 "
-    # print(query)
     res_cpu = []
-    # res_cpu = fetch_prometheus(host, query, "point").json()
-    # print(res_cpu)
     count = 1
     while count > 0:
         res_cpu = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # res_cpu = fetch_prometheus(host, query, "point").json()
-        # print(res_cpu)
         if len(res_cpu['data']['result']) != 0:
             break
         time.sleep(2)
@@ -231,15 +198,10 @@ def get_container_cpu_usage(host: str = GLOBAL_CONFIG['prometheus_host'],
                             end_time=None,
                             service_name: str = ''):
     query = f"sum(irate(container_cpu_usage_seconds_total{{container_label_com_docker_swarm_service_name='{service_name}'}}[3m]))without(cpu)*100"
-    # print(query)
     res_cpu = []
-    # res_cpu = fetch_prometheus(host, query, "point").json()
-    # print(res_cpu)
     count = 1
     while count > 0:
         res_cpu = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # res_cpu = fetch_prometheus(host, query, "point").json()
-        # print(res_cpu)
         if len(res_cpu['data']['result']) != 0:
             break
         time.sleep(2)
@@ -254,14 +216,11 @@ def get_container_memory_usage(host: str = GLOBAL_CONFIG['prometheus_host'],
                                start_time=None,
                                end_time=None,
                                service_name: str = ''):
-    # query = f"container_memory_usage_bytes/container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}*100"
-    # print(query)
     query = f"avg_over_time(container_memory_usage_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}[3m]) / (container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}) * 100"
     res_memory = []
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -276,14 +235,11 @@ def get_container_memory_limit(host: str = GLOBAL_CONFIG['prometheus_host'],
                                start_time=None,
                                end_time=None,
                                service_name: str = ''):
-    # query = f"container_memory_usage_bytes/container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}*100"
-    # print(query)
     query = f"container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}} / (1024*1024)"
     res_memory = []
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -298,14 +254,11 @@ def get_container_fs_usage(host: str = GLOBAL_CONFIG['prometheus_host'],
                            start_time=None,
                            end_time=None,
                            service_name: str = ''):
-    # query = f"container_memory_usage_bytes/container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}*100"
-    # print(query)
     query = f"rate(container_fs_usage_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}[1m]) / (1024*1024)"
     res_memory = []
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -320,14 +273,11 @@ def get_container_fs_write(host: str = GLOBAL_CONFIG['prometheus_host'],
                            start_time=None,
                            end_time=None,
                            service_name: str = ''):
-    # query = f"container_memory_usage_bytes/container_spec_memory_limit_bytes{{container_label_com_docker_swarm_service_name='{service_name}'}}*100"
-    # print(query)
     query = f"rate(container_fs_write_seconds_total{{container_label_com_docker_swarm_service_name='{service_name}'}}[1m])"
     res_memory = []
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -347,7 +297,6 @@ def get_container_fs_read(host: str = GLOBAL_CONFIG['prometheus_host'],
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -367,7 +316,6 @@ def get_container_net_receive(host: str = GLOBAL_CONFIG['prometheus_host'],
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -387,7 +335,6 @@ def get_container_net_trainsmit(host: str = GLOBAL_CONFIG['prometheus_host'],
     count = 1
     while count > 0:
         res_memory = fetch_prometheus(host, query, "range", 10, start_time, end_time).json()
-        # print(res_memory)
         if len(res_memory['data']['result']) != 0:
             break
         time.sleep(2)
@@ -398,7 +345,6 @@ def get_container_net_trainsmit(host: str = GLOBAL_CONFIG['prometheus_host'],
         return get_prometheus_response_container_value(res_memory)
 
 
-# 递归删除文件夹及其内容
 def delete_folder_recursive(folder_path):
     try:
         for root, dirs, files in os.walk(folder_path, topdown=False):
@@ -412,7 +358,6 @@ def delete_folder_recursive(folder_path):
 
 
 def init_config(csv_path: str, result_dir: Path, performance: int == 1):
-    # 创建存储收集数据的文件
     path_list = [result_dir, result_dir / 'conf', result_dir / 'log', result_dir / 'trace']
 
     for p in path_list:
@@ -426,7 +371,6 @@ def init_config(csv_path: str, result_dir: Path, performance: int == 1):
     key_services = parameters['microservice'].unique().tolist()
     curr_conf = {}
     config_dict = {}
-    # 从基础配置文件中初始化配置字典，给出默认值
     for index, row in parameters.iterrows():
         if pd.notnull(row['parameter']):
             temp_dict = {}
@@ -434,21 +378,15 @@ def init_config(csv_path: str, result_dir: Path, performance: int == 1):
             range_list = row['range'].strip().split(';')
             if row['categorical'] == 1:
                 range_list = [str(x) for x in range_list]
-                # curr_conf[parameter_name] = range_list[0]
                 curr_conf[parameter_name] = row['default']
                 temp_dict['type'] = 'categorical'
-                # temp_dict['length'] = len(range_list)
                 temp_dict['range_list'] = range_list
                 temp_dict['step'] = int(row['step'])
-                # temp_dict['value'] = curr_conf[parameter_name]
                 temp_dict['value'] = range_list.index(curr_conf[parameter_name])
             elif row['discrete'] == 1:
                 range_list = [int(x) for x in range_list]
-                # 由于已经出现性能违规，那么我们首先就应该放大资源使用量，先保证第一步不违规
-                # 如果资源过剩的情况，那么就缩小资源
                 if 'replicas' in parameter_name:
                     curr_conf[parameter_name] = int(row['default']) + 1
-                    # curr_conf[parameter_name] = int(range_list[1]) if performance == 1 else int(range_list[0])
                     if 'nginx' in parameter_name or 'frontend' in parameter_name:
                         curr_conf[parameter_name] = 1
                 elif 'resource' in parameter_name:
@@ -457,33 +395,26 @@ def init_config(csv_path: str, result_dir: Path, performance: int == 1):
                     prefix = parameter_name.split('resource')[0]
                     curr_conf[prefix + 'cpus'] = round(curr_conf[parameter_name] * 0.1, 2)
                     curr_conf[prefix + 'memory'] = round(curr_conf[parameter_name] * 0.2, 2)
-                    # print(curr_conf[parameter_name])
                 else:
-                    # curr_conf[parameter_name] = int(sum(range_list) / len(range_list))
                     curr_conf[parameter_name] = int(row['default'])
                 temp_dict['type'] = 'discrete'
                 temp_dict['step'] = int(row['step'])
                 temp_dict['value'] = curr_conf[parameter_name]
                 temp_dict['min'] = range_list[0]
                 temp_dict['max'] = range_list[1]
-                # 动态更新resource的上下限，尽可能减少不必要的资源探索
                 if 'resource' in parameter_name:
                     temp_dict['min'] = max(int(row['default']) - 10 * int(row['step']), 1)
                     temp_dict['max'] = int(row['default']) + 3 * int(row['step'])
             elif row['float'] == 1:
                 range_list = [float(x) for x in range_list]
-                # curr_conf[parameter_name] = round(float(sum(range_list) / len(range_list)), 2)
                 curr_conf[parameter_name] = float(row['default'])
                 temp_dict['type'] = 'float'
                 temp_dict['step'] = float(row['step'])
                 temp_dict['value'] = curr_conf[parameter_name]
                 temp_dict['min'] = range_list[0]
                 temp_dict['max'] = range_list[1]
-            # print(temp_dict)
-            # print(parameter_name)
             config_dict[parameter_name] = temp_dict
 
-    # my_logger.info("init config:" + str(curr_conf))
     conf_path = result_dir / 'conf' / f"{0}_conf.yml"
     conf_path.write_text(yaml.safe_dump(curr_conf))
     return key_services, config_dict, conf_path
@@ -491,7 +422,6 @@ def init_config(csv_path: str, result_dir: Path, performance: int == 1):
 
 def init_config_from_key_services(csv_path: str, result_dir: Path, key_services,default_conf, performance: int == 1,
                                   parameters_type: int == 1):
-    # 创建存储收集数据的文件
     path_list = [result_dir, result_dir / 'conf', result_dir / 'log', result_dir / 'trace']
 
     for p in path_list:
@@ -502,7 +432,7 @@ def init_config_from_key_services(csv_path: str, result_dir: Path, key_services,
             p.mkdir()
 
     parameters = pd.read_csv(csv_path)
-    # key_services = parameters['microservice'].unique().tolist()
+
     curr_conf = {}
     config_dict = {}
     default_conf = read_yaml(default_conf)
@@ -533,7 +463,6 @@ def init_config_from_key_services(csv_path: str, result_dir: Path, key_services,
                 para = parameters[(parameters['type'] == 'resource')]
         else:
             para = parameters[(parameters['type'] == 'resource')]
-        # 从基础配置文件中初始化配置字典，给出默认值
         for index, row in para.iterrows():
             if pd.notnull(row['parameter']):
                 temp_dict = {}
@@ -541,21 +470,15 @@ def init_config_from_key_services(csv_path: str, result_dir: Path, key_services,
                 range_list = row['range'].strip().split(';')
                 if row['categorical'] == 1:
                     range_list = [str(x) for x in range_list]
-                    # curr_conf[parameter_name] = range_list[0]
                     curr_conf[parameter_name] = row['default']
                     temp_dict['type'] = 'categorical'
-                    # temp_dict['length'] = len(range_list)
                     temp_dict['range_list'] = range_list
                     temp_dict['step'] = int(row['step'])
-                    # temp_dict['value'] = curr_conf[parameter_name]
                     temp_dict['value'] = range_list.index(curr_conf[parameter_name])
                 elif row['discrete'] == 1:
                     range_list = [int(x) for x in range_list]
-                    # 由于已经出现性能违规，那么我们首先就应该放大资源使用量，先保证第一步不违规
-                    # 如果资源过剩的情况，那么就缩小资源
                     if 'replicas' in parameter_name:
                         curr_conf[parameter_name] = int(row['default']) + 1
-                        # curr_conf[parameter_name] = int(range_list[1]) if performance == 1 else int(range_list[0])
                         if 'nginx' in parameter_name or 'frontend' in parameter_name:
                             curr_conf[parameter_name] = 1
                     elif 'resource' in parameter_name:
@@ -565,37 +488,27 @@ def init_config_from_key_services(csv_path: str, result_dir: Path, key_services,
                         prefix = parameter_name.split('resource')[0]
                         curr_conf[prefix + 'cpus'] = round(curr_conf[parameter_name] * 0.1, 2)
                         curr_conf[prefix + 'memory'] = round(curr_conf[parameter_name] * 0.2, 2)
-                        # print(curr_conf[parameter_name])
                     else:
-                        # curr_conf[parameter_name] = int(sum(range_list) / len(range_list))
                         curr_conf[parameter_name] = int(row['default'])
                     temp_dict['type'] = 'discrete'
                     temp_dict['step'] = int(row['step'])
                     temp_dict['value'] = curr_conf[parameter_name]
                     temp_dict['min'] = range_list[0]
                     temp_dict['max'] = range_list[1]
-                    # 动态更新resource的上下限，尽可能减少不必要的资源探索，当前服务默认配置开始
                     if 'resource' in parameter_name:
                         temp_dict['min'] = max(default_conf[parameter_name]-5, 1)
                         temp_dict['max'] = int(default_conf[parameter_name]) + 20 * int(row['step'])
-                        # temp_dict['min'] = max(int(row['default']) - 5 * int(row['step']), 1)
-                        # temp_dict['max'] = int(row['default']) + 10 * int(row['step'])
                 elif row['float'] == 1:
                     range_list = [float(x) for x in range_list]
-                    # curr_conf[parameter_name] = round(float(sum(range_list) / len(range_list)), 2)
                     curr_conf[parameter_name] = float(row['default'])
                     temp_dict['type'] = 'float'
                     temp_dict['step'] = float(row['step'])
                     temp_dict['value'] = curr_conf[parameter_name]
                     temp_dict['min'] = range_list[0]
                     temp_dict['max'] = range_list[1]
-                # print(temp_dict)
-                # print(parameter_name)
                 config_dict[parameter_name] = temp_dict
 
-    # my_logger.info("init config:" + str(curr_conf))
     print(config_dict)
-    # return config_dict
     conf_path = result_dir / 'conf' / f"{0}_conf.yml"
     conf_path.write_text(yaml.safe_dump(curr_conf))
     return key_services, config_dict, conf_path
@@ -609,7 +522,6 @@ def read_yaml(conf_path: Path):
 def get_conf_row_count(conf_path: Path) -> int:
     with open(conf_path, "r") as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
-        # Get the number of lines
         num_lines = len(data)
     return num_lines
 
@@ -622,30 +534,19 @@ def min_max(data_list: list, map_range: float = 1):
 
 
 def get_resource(conf_path: Path):
-    # cpu_re = re.compile(r"(\w+)_(cpus):\s+(\d*\.?\d+)")
     resource_re = re.compile(r"(\w+)_(resource):\s+(\d*\.?\d+)")
-    # memory_re = re.compile(r"(\w+)_(memory):\s+(\d*\.?\d+)")
     replicas_re = re.compile(r"(\w+)_(replicas):\s+(\d*\.?\d+)")
-    # cpus_list = []
-    # memory_list = []
     resource_list = []
     replicas_list = []
     content = conf_path.read_text()
     res = [0.0, 0.0]
 
-    # for match in cpu_re.finditer(content):
-    #     cpus_list.append(float(match.group(3)))
-    # for match in memory_re.finditer(content):
-    #     memory_list.append(float(match.group(3)))
     for match in replicas_re.finditer(content):
         replicas_list.append(float(match.group(3)))
     for match in resource_re.finditer(content):
         resource_list.append(float(match.group(3)))
 
     return sum([x * y for x, y in zip(resource_list, replicas_list)])
-    # res[1] = sum([x * y for x, y in zip(memory_list, replicas_list)])
-
-    # return res
 
 
 def get_reward(pre_conf_dict: dict, curr_conf_path: Path):
@@ -654,9 +555,6 @@ def get_reward(pre_conf_dict: dict, curr_conf_path: Path):
     pre_cpu = []
     pre_memory = []
     pre_replicas = []
-    # with open(curr_conf_path, "r") as f:
-    #     curr_conf = yaml.safe_load(f)
-    # print(curr_conf)
     for k, v in pre_conf_dict.items():
         if k.endswith('cpu'):
             pre_cpu.append(pre_conf_dict[k]['value'])
@@ -671,10 +569,6 @@ def get_reward(pre_conf_dict: dict, curr_conf_path: Path):
     reward.append(curr_resource[0] - pre_resource[0])
     reward.append(curr_resource[1] - pre_resource[1])
 
-    # if k.endswith('cpu') or k.endswith('memory'):
-    #     cost.append(curr_conf[k] - pre_conf_dict[k]['value'])
-    # cost[0] = 10
-    # print(len(cost))
     all_zero = all(x == 0 for x in reward)
     if all_zero:
         return 0
@@ -692,7 +586,6 @@ def get_config_dict_resource(config_dict):
 
 
 def get_conf_vector(config_dict):
-    # 得到每次配置的值，用于相似度计算
     conf_vector = []
     for k, v in config_dict.items():
         conf_vector.append(v['value'])
@@ -717,7 +610,6 @@ def compute_similarity(replay_path, curr_conf_vector, config_dict, threshold, ke
         tmp.append(float(row['resource']))
         tmp.append(obs)
         conf_vector_list.append(tmp)
-    # similarity = []
     max_similarity = 0
     latency = 0
     resource = get_config_dict_resource(config_dict)
@@ -728,10 +620,8 @@ def compute_similarity(replay_path, curr_conf_vector, config_dict, threshold, ke
         if cosine_similarity > max_similarity:
             max_similarity = cosine_similarity
             latency = vector[1]
-            # resource = vector[2]
             observation = vector[3]
 
-        # similarity.append(cosine_similarity)
     if max_similarity > threshold:
         new_obs = []
         for i in range(2 * len(key_services)):
@@ -740,10 +630,8 @@ def compute_similarity(replay_path, curr_conf_vector, config_dict, threshold, ke
         noise = round(np.random.normal(0, 2), 2)
         latency += noise
         new_obs += [resource] + workload + [latency]
-        # 定义随机值，以95%的概率启用历史数据，5%的概率重新部署
         values = [0, 1]
         weights = [0.1, 0.9]
-        # 使用 choices() 函数生成随机值
         replay = random.choices(values, weights)[0]
         if replay == 1 and latency < slo:
             latency = round(latency, 2)
@@ -784,20 +672,16 @@ def parser_args() -> argparse.Namespace:
 
 
 def clear_folder(folder_path):
-    # 获取文件夹下的所有文件
     file_list = os.listdir(folder_path)
-    # 遍历文件夹下的所有文件，并删除
     for file in file_list:
         file_path = os.path.join(folder_path, file)
         if os.path.isfile(file_path):
             os.remove(file_path)
 
 
-# 检测文件是否存在
 def check_file_exists(file_path):
     if os.path.exists(file_path):
         pass
-        # print(f"文件'{file_path}'存在。")
     else:
         print(f"文件'{file_path}'不存在。")
 
@@ -812,19 +696,16 @@ def load_dict(name):
         return pickle.load(f)
 
 
-# 复制文件并改名
 def copy_and_rename_file(source_file, destination_folder, new_filename):
     try:
         with open(source_file, 'rb') as f_source:
             with open(os.path.join(destination_folder, new_filename), 'wb') as f_destination:
                 f_destination.write(f_source.read())
         os.rename(os.path.join(destination_folder, new_filename), os.path.join(destination_folder, new_filename))
-        # print(f"file'{source_file}' rename to '{new_filename}'")
     except Exception as e:
         print(f"error: {e}")
 
 
-# 把list写入txt
 def list2txt(file_path, data):
     with open(file_path, 'w') as file:
         for item in data:

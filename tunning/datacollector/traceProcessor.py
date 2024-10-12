@@ -33,7 +33,6 @@ def _cal_exact_merge(data: pd.DataFrame):
         return potentialConflicGrp
 
     def findAllConflict(
-        # span, conflictionGrp: List[Set[int]], potentialConflicGrp: pd.DataFrame
             span, conflictionGrp: List[List[int]], potentialConflicGrp: pd.DataFrame
     ):
         myStart = span["startTime"]
@@ -129,7 +128,6 @@ def decouple_parent_and_child(data: pd.DataFrame, percentile=0.95):
     child_perspective.index.names = ["microservice", "pod"]
     quantiled = pd.concat([parent_perspective, child_perspective])
     quantiled = quantiled[~quantiled.index.duplicated(keep="first")]
-    # Parse the serie to a data frame
     data = quantiled.to_frame(name="latency")
     data = data.reset_index()
     return data
@@ -190,7 +188,6 @@ def remove_repeatation(data: pd.DataFrame):
 
     def remove_prev_level_child(prev_level):
         nonlocal data
-        # Find all next level
         repeat_children = data.loc[
             (data["parentId"] == prev_level["childId"])
             & (data["parentMS"] == data["childMS"])
@@ -199,16 +196,13 @@ def remove_repeatation(data: pd.DataFrame):
             (data["parentId"] == prev_level["childId"])
             & ~(data["parentMS"] == data["childMS"])
         ]
-        # Remove repeat for next level's repeat children
         if len(repeat_children) != 0:
             for _, child in repeat_children.iterrows():
                 next_level_children = remove_prev_level_child(child)
                 other_children = pd.concat([other_children, next_level_children])
-        # Build relationship between previous level's parent and next level's children
         other_children["parentId"] = prev_level["parentId"]
         other_children["parentDuration"] = prev_level["parentDuration"]
         other_children["parentOperation"] = prev_level["parentOperation"]
-        # Remove previous level
         data = data.loc[~(data["childId"] == prev_level["childId"])]
         data = data.loc[~data["childId"].isin(other_children["childId"])]
         data = pd.concat([data, other_children])

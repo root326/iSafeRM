@@ -7,15 +7,10 @@ import omnisafe
 import os
 from tunning.bench.microservices_benchmark import MicroservicesBenchmark
 from tunning.constants import GLOBAL_CONFIG
-# current_file_path = os.path.abspath(__file__)
-# tuning_folder = os.path.dirname(os.path.dirname(current_file_path))
 tuning_folder = GLOBAL_CONFIG["project_root_dir"]
 import argparse
 from tunning.datacollector.trace_collector import TraceCollector
 import time
-# 在线运行打开
-# from tunning.benchenvs.microservices_env import MicroservicesENV
-# 离线运行打开
 from tunning.benchenvs.microservices_env_offline import MicroservicesENVOffline
 
 def coast_time(func):
@@ -128,7 +123,6 @@ class safescaler:
 
 
     def deploy_ms(self):
-        # 启动服务
         self._bench.cleanup(0)
         start_time = time.time()-300
         self._bench.run(conf_path=self._default_conf, workload=[self._workload], task_id=0)
@@ -136,15 +130,9 @@ class safescaler:
         for i in range(3):
             self._bench.run_workload(self._workload)
 
-        # 收集延迟数据
         self._trace_collector.set_task_id(0)
         self._trace_collector.collect_ms_data(start_time)
 
-        # self._ms_data = self._trace_collector.get_ms_data_csv()
-        # self._trace_collector.close_pool()
-
-        # root cause analysis
-        # self.services_rca(self._rca_dir)
 
 
 
@@ -181,22 +169,20 @@ class safescaler:
 
 
     def train_online(self):
-        # args = self._args
         env_id = 'wk-sn_key_services_key_parameters'
         custom_cfgs = {
             'train_cfgs': {
-                'total_steps': self._args["total_steps"],  # 256
+                'total_steps': self._args["total_steps"],
                 'vector_env_nums': 1,
                 'parallel': 1,
                 'torch_threads': 16
             },
             'algo_cfgs': {
-                'steps_per_epoch': self._args["steps_per_epoch"],  # 64
+                'steps_per_epoch': self._args["steps_per_epoch"],
                 'safety_budget': 100,
-                'update_iters': self._args["update_iters"],  # 4
-                'batch_size': self._args["batch_size"],  # 16
+                'update_iters': self._args["update_iters"],
+                'batch_size': self._args["batch_size"],
                 'unsafe_reward': -1.0
-                # 'start_learning_steps': 0,
             },
             'logger_cfgs': {
                 'log_dir': self._args["train_dir"],
@@ -208,22 +194,20 @@ class safescaler:
 
     @coast_time
     def train_offline(self):
-        # args = self._args
         env_id = 'wk10-sn_key_services_key_parameters'
         custom_cfgs = {
             'train_cfgs': {
-                'total_steps': self._args["total_steps"],  # 256
+                'total_steps': self._args["total_steps"],
                 'vector_env_nums': 1,
                 'parallel': 1,
                 'torch_threads': 16
             },
             'algo_cfgs': {
-                'steps_per_epoch': self._args["steps_per_epoch"],  # 64
+                'steps_per_epoch': self._args["steps_per_epoch"],
                 'safety_budget': 100,
-                'update_iters': self._args["update_iters"],  # 4
-                'batch_size': self._args["batch_size"],  # 16
+                'update_iters': self._args["update_iters"],
+                'batch_size': self._args["batch_size"],
                 'unsafe_reward': -2.0
-                # 'start_learning_steps': 0,
             },
             'logger_cfgs': {
                 'log_dir': self._args["train_dir"],
@@ -240,23 +224,17 @@ if __name__ == "__main__":
 
 
     args = vars(parser_args())
-    # print(list(load_json("/home/lilong/iSafeRM/data/rca/top_services.json").keys()))
-
-    # print(load_dict(tuning_folder+'/output/config'))
     model = safescaler(args)
 
     if args["online"] == "no":
         if args["root_cause_analysis"] == "yes":
             model.services_rca(args["rca_dir"])
-            # model.train_offline()
         else:
 
             model.train_offline()
     else:
         my_logger.info("deploying microservices")
-        # model.deploy_ms()
         my_logger.info("root cause analysis")
-        # model.services_rca()
         args["key_services"] = list(load_json("//data/rca/top_services.json").keys())[
                                :args["top_k"]]
         save_dict(args, f"{tuning_folder}/output/config")

@@ -1,4 +1,3 @@
-# prometheus镜像
 
 docker search prometheus
 docker pull bitnami/prometheus:2.45.0
@@ -7,8 +6,6 @@ docker run -d -p 9090:9090 --name prometheus --restart=always \
     --config.file=/data/prometheus.yml
 
 
-
-# 暴露被监控节点
 docker search node-exporter
 docker pull bitnami/node-exporter:1.6.0
 docker run -d --name node-exporter --restart=always \

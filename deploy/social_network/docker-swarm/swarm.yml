@@ -5,13 +5,7 @@ services:
     image: jaegertracing/all-in-one:1.39
     hostname: jaeger-agent
     ports:
-      #      - 5775:5775/udp
-      #      - 6831:6831/udp
-      #      - 6832:6832/udp
-      #      - 5778:5778
       - 16686:16686
-      #      - 14268:14268
-      #      - 9411:9411
     deploy:
       placement:
         constraints:
@@ -39,8 +33,8 @@ services:
     hostname: compose-post-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   social-graph-service:
     depends_on:
@@ -61,8 +55,8 @@ services:
     hostname: social-graph-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-timeline-service:
     depends_on:
@@ -83,7 +77,7 @@ services:
     hostname: user-timeline-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
 
 
   home-timeline-service:
@@ -104,8 +98,8 @@ services:
     hostname: home-timeline-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   nginx-web-server:
     depends_on:
@@ -126,13 +120,13 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
-      - /home/lilong/tuning_microservice/.tmp/nginx-web-server/pages:/usr/local/openresty/nginx/pages
-      - /home/lilong/tuning_microservice/.tmp/nginx-web-server/conf/nginx-tmp.conf:/usr/local/openresty/nginx/conf/nginx-tmp.conf
-      - /home/lilong/tuning_microservice/.tmp/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
-      - /home/lilong/tuning_microservice/.tmp/gen-lua:/gen-lua
-      - /home/lilong/tuning_microservice/.tmp/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/nginx-web-server/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - /home/XXXX-1/tuning_microservice/.tmp/nginx-web-server/pages:/usr/local/openresty/nginx/pages
+      - /home/XXXX-1/tuning_microservice/.tmp/nginx-web-server/conf/nginx-tmp.conf:/usr/local/openresty/nginx/conf/nginx-tmp.conf
+      - /home/XXXX-1/tuning_microservice/.tmp/nginx-web-server/jaeger-config.json:/usr/local/openresty/nginx/jaeger-config.json
+      - /home/XXXX-1/tuning_microservice/.tmp/gen-lua:/gen-lua
+      - /home/XXXX-1/tuning_microservice/.tmp/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   unique-id-service:
     depends_on:
@@ -152,8 +146,8 @@ services:
     hostname: unique-id-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   url-shorten-service:
     depends_on:
@@ -174,8 +168,8 @@ services:
     hostname: url-shorten-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
 
   media-frontend:
@@ -197,8 +191,8 @@ services:
     ports:
       - 8081:8080
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/media-frontend/lua-scripts:/usr/local/openresty/nginx/lua-scripts
-      - /home/lilong/tuning_microservice/.tmp/media-frontend/conf/nginx-tmp.conf:/usr/local/openresty/nginx/conf/nginx-tmp.conf
+      - /home/XXXX-1/tuning_microservice/.tmp/media-frontend/lua-scripts:/usr/local/openresty/nginx/lua-scripts
+      - /home/XXXX-1/tuning_microservice/.tmp/media-frontend/conf/nginx-tmp.conf:/usr/local/openresty/nginx/conf/nginx-tmp.conf
 
   media-service:
     depends_on:
@@ -219,8 +213,8 @@ services:
     hostname: media-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   post-storage-service:
     depends_on:
@@ -241,8 +235,8 @@ services:
     hostname: post-storage-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   text-service:
     depends_on:
@@ -262,8 +256,8 @@ services:
     hostname: text-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-mention-service:
     depends_on:
@@ -283,8 +277,8 @@ services:
     hostname: user-mention-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-service:
     depends_on:
@@ -305,8 +299,8 @@ services:
     hostname: user-service
     image: deathstarbench/social-network-microservices:0.0.12
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   home-timeline-redis:
     depends_on:
@@ -319,8 +313,8 @@ services:
           - node.hostname == wyl3
     command: "redis-server /social-network-microservices/config/home-timeline-redis.conf"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   media-memcached:
     depends_on:
@@ -349,8 +343,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 2"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   post-storage-memcached:
     depends_on:
@@ -379,8 +373,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 75"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   social-graph-mongodb:
     depends_on:
@@ -394,8 +388,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 16"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   social-graph-redis:
     depends_on:
@@ -408,8 +402,8 @@ services:
           - node.hostname == wyl3
     command: "redis-server /social-network-microservices/config/redis.conf"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   url-shorten-memcached:
     depends_on:
@@ -438,8 +432,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 36"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-memcached:
     depends_on:
@@ -468,8 +462,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 8"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-timeline-mongodb:
     depends_on:
@@ -483,8 +477,8 @@ services:
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
     # command: "mongod --serviceExecutor adaptive --listenBacklog 1024 --syncdelay 3600 --wiredTigerCacheSizeGB 75"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
   user-timeline-redis:
     depends_on:
@@ -497,8 +491,8 @@ services:
           - node.hostname == wyl3
     command: "redis-server /social-network-microservices/config/redis.conf"
     volumes:
-      - /home/lilong/tuning_microservice/.tmp/config:/social-network-microservices/config
-      - /home/lilong/tuning_microservice/.tmp/keys:/keys
+      - /home/XXXX-1/tuning_microservice/.tmp/config:/social-network-microservices/config
+      - /home/XXXX-1/tuning_microservice/.tmp/keys:/keys
 
 networks:
   default:

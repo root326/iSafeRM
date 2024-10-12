@@ -2,16 +2,9 @@
 
 - name: prepare files
   hosts: all
-#  vars:
-#    workload1: workload1
-#    workload2: workload2
-#    workload2 workload3
-#  vars_files:
-#    - "{{ conf_path }}"
+
   vars:
     benchmark: social_network
-
-#    - "~/{{ project_name }}/tests/test_conf.yml"
 
   tasks:
     - name: check if .tmp exists
@@ -49,15 +42,8 @@
   hosts: master
   vars:
     benchmark: social_network
-    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    ansible_python_interpreter: /home/XXXX-1/miniconda3/envs/mytunning/bin/python
   tasks:
-#    - name: Create Docker Overlay Network
-#      docker_network:
-#        name: social-network-overlay
-#        driver: overlay
-##        ipam_driver: default
-#        ipam_config:
-#          - subnet: 12.0.0.0/8
 
     - name: deploy socialnetwork benchmark use docker swarm-frontend
       community.docker.docker_stack:
@@ -81,56 +67,3 @@
       ansible.builtin.file:
         path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output
         state: directory
-
-#    - name: initial socialnetwork benchmark
-#      shell:
-#        cmd: >
-#          /home/lilong/miniconda3/envs/mytunning/bin/python scripts/init_social_graph.py --ip={{ entry_ip }} --graph=socfb-Reed98
-#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/init_social_graph.txt 2>&1
-#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
-
-#    - name: wait for 10 seconds
-#      ansible.builtin.wait_for:
-#        timeout: 10
-#
-#    - name: compose post {{ workload1 }}
-#      shell:
-#        cmd: >
-#          wrk -D exp -t 1 -c 2 -d 30 -R {{ workload1 }} -L -s ./wrk2/scripts/social-network/compose-post.lua http://{{ entry_ip }}:8080/wrk2-api/post/compose
-#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/compose_post.log 2>&1
-#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
-#      async: 500
-#      poll: 0
-#      register: compose_post
-#
-#    - name: read user timeline {{ workload2 }}
-#      shell:
-#        cmd: >
-#          wrk -D exp -t 1 -c 2 -d 30 -R {{ workload2 }} -L -s ./wrk2/scripts/social-network/read-user-timeline.lua http://{{ entry_ip }}:8080/wrk2-api/user-timeline/read
-#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/read_user_timeline.log 2>&1
-#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
-#      async: 500
-#      poll: 0
-#      register: read_user_timeline
-#
-#    - name: read home timeline {{ workload3 }}
-#      shell:
-#        cmd: >
-#          wrk -D exp -t 1 -c 2 -d 30 -R {{ workload3 }} -L -s ./wrk2/scripts/social-network/read-home-timeline.lua http://{{ entry_ip }}:8080/wrk2-api/home-timeline/read
-#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/read_home_timeline.log 2>&1
-#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
-#      async: 500
-#      poll: 0
-#      register: read_home_timeline
-#
-#    - name: wait for compose-post, read-user-timeline, read-home-timeline finish
-#      ansible.builtin.async_status:
-#        jid: "{{ item.ansible_job_id }}"
-#      register: async_results
-#      until: async_results.finished
-#      retries: 20
-#      delay: 30
-#      with_items:
-#        - "{{ compose_post }}"
-#        - "{{ read_user_timeline }}"
-#        - "{{ read_home_timeline }}"

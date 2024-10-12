@@ -4,7 +4,6 @@
   hosts: all
   vars_files:
     - "{{ conf_path }}"
-#    - "~/tuning_microservice/tests/test_conf.yml"
   vars:
     benchmark: memcached
 
@@ -23,7 +22,6 @@
       template: src=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/templates/{{ item.src }} dest=~/tuning_microservice/.tmp/.{{ benchmark }}_tmp/{{ item.dest }}
       with_items:
          - { src: "{{ benchmark }}_swarm.yml.j2", dest: "{{ benchmark }}_swarm.yml" }
-#         - { src: "{{ benchmark }}.conf.j2", dest: "{{ benchmark }}.conf" }
          - { src: workloada.j2, dest: workloada }
 
 
@@ -31,7 +29,7 @@
 - name: memcached benchmark
   hosts: master
   vars:
-    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    ansible_python_interpreter: /home/XXXX-1/miniconda3/envs/mytunning/bin/python
     benchmark: memcached
   tasks:
 

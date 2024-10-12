@@ -26,20 +26,16 @@ class CausalModel:
                        objectives):
         """This function is used to exclude edges which are not possible"""
         tabu_edges = []
-        # constraint on configuration options
         for opt in options:
             for cur_elem in columns:
                 if 'resource' in opt or 'resource' in cur_elem:
-                    # print('11111')
                     continue
                 if cur_elem != opt:
                     tabu_edges.append((cur_elem, opt))
 
-        # constraints on performance objetcives
         for obj in objectives:
             for cur_elem in columns:
                 if 'resource' in obj or 'resource' in cur_elem:
-                    # print('22222')
                     continue
                 if cur_elem != obj:
                     tabu_edges.append((obj, cur_elem))
@@ -113,18 +109,15 @@ class CausalModel:
         directed_edge = "-->"
         undirected_edge = "o-o"
         trail_edge = "o->"
-        #  entropy only contains directed edges.
 
         options = {}
         for opt in columns:
             options[opt] = {}
             options[opt][directed_edge] = []
             options[opt][bi_edge] = []
-        # add DAG edges to current graph
         for edge in DAG:
             if edge[0] or edge[1] is None:
                 options[edge[0]][directed_edge].append(edge[1])
-        # replace trail and undirected edges with single edges using entropic policy
         for i in range(len(PAG)):
             if trail_edge in PAG[i]:
                 PAG[i] = PAG[i].replace(trail_edge, directed_edge)
@@ -132,7 +125,6 @@ class CausalModel:
                 PAG[i] = PAG[i].replace(undirected_edge, directed_edge)
             else:
                 continue
-        # update causal graph edges
 
         for edge in PAG:
             cur = edge.split(" ")
@@ -148,7 +140,6 @@ class CausalModel:
                 options[node_one][bi_edge].append(node_two)
             else:
                 print("[ERROR]: unexpected edges")
-        # extract mixed graph edges
         single_edges = []
         double_edges = []
 
@@ -204,41 +195,16 @@ class CausalModel:
         for items in paths:
             for path in paths.get(items):
                 ace[str(path)] = 0
-                # print(path)
-                # obj = CE(graph=G, treatment=path[1], outcome=path[0])  # 使用ananke估计平均因果效应
-                # ace[str(path)] += obj.compute_effect(df, strategy[obj.strategy])  # computing the effect
                 for i in range(0, len(path)):
                     if i > 0:
-                        obj = CE(graph=G, treatment=path[i], outcome=path[0])  # 使用ananke估计平均因果效应
-                        ace[str(path)] += obj.compute_effect(df, strategy[obj.strategy])  # computing the effect
-                # ace[str(path)] = ace[str(path)] / len(path)
-                # print(ace)
-        # rank paths and select top K
+                        obj = CE(graph=G, treatment=path[i], outcome=path[0])
+                        ace[str(path)] += obj.compute_effect(df, strategy[obj.strategy])
         paths_dict = {k: v for k, v in sorted(ace.items(), key=lambda item: item[1], reverse=True)}
         if K == 0:
             paths = list(paths_dict.keys())
         else:
             paths = list(paths_dict.keys())[:K]
-        # paths = [eval(key) for key in paths]
         return paths
-        # """This function is used to compute P_ACE for each path"""
-        # ace = {}
-        #
-        # for path in paths:
-        #     ace[str(path)] = 0
-        #     for i in range(0, len(path)):
-        #         if i > 0:
-        #             try:
-        #                 obj = CE(graph=G, treatment=path[i], outcome=path[0])
-        #                 ace[str(path)] += obj.compute_effect(df, "gformula")  # computing the effect
-        #             except:
-        #                 continue
-        # # rank paths and select top K
-        # try:
-        #     paths = {k: v for k, v in sorted(ace.items(), key=lambda item: item[1], reverse=True)}[:K]
-        # except TypeError:
-        #     pass
-        # return paths
 
 
     def compute_individual_treatment_effect(self, df, paths,
@@ -259,7 +225,6 @@ class CausalModel:
         else:
             bestval = (1 - query) * bug_val
 
-        # multi objective treatment effect
         if len(objectives) >= 2:
             m_paths = defaultdict(list)
             multi_paths = []
@@ -274,7 +239,6 @@ class CausalModel:
                         cur_p.append(paths[ind])
                     paths = [i for j, i in enumerate(paths) if j not in indexes]
                     multi_paths.append(cur_p)
-            # compute treatment effect
             if paths:
                 for path in paths:
                     cur_g = DiGraph()
@@ -289,7 +253,6 @@ class CausalModel:
                                                       variable_types=variable_types,
                                                       admissable_set=list(admissable_set))
                                 max_effect = -20000
-                                # compute effect for each value for the options
                                 for val in option_values[path[i]]:
                                     x = pd.DataFrame({path[i]: [val], path[0]: [bestval[path[0]]]})
                                     cur_effect = effect.pdf(x)
@@ -313,7 +276,6 @@ class CausalModel:
                                                               variable_types=variable_types,
                                                               admissable_set=list(admissable_set))
                                         max_effect = -20000
-                                        # compute effect for each value for the options
                                         for val in option_values[path[i]]:
                                             x = pd.DataFrame({path[i]: [val], objectives[0]: [bestval[objectives[0]]],
                                                               objectives[1]: [bestval[objectives[1]]]})
@@ -330,7 +292,6 @@ class CausalModel:
                                                               variable_types=variable_types,
                                                               admissable_set=list(admissable_set))
                                         max_effect = -20000
-                                        # compute effect for each value for the options
                                         for val in option_values[path[i]]:
                                             x = pd.DataFrame({path[i]: [val], objectives[0]: [bestval[objectives[0]]],
                                                               objectives[1]: [bestval[objectives[1]]],
@@ -345,7 +306,6 @@ class CausalModel:
 
                 return config
 
-        # single objective treatment effect
         selected_effect = []
         for path in paths:
 
@@ -364,7 +324,6 @@ class CausalModel:
                                                   variable_types=variable_types, admissable_set=list(admissable_set))
 
                             max_effect = -20000
-                            # compute effect for each value for the options
                             for val in option_values[path[i]]:
 
                                 x = pd.DataFrame({path[i]: [val], path[0]: [bestval]})
@@ -390,9 +349,7 @@ class CausalModel:
 
 class Graph:
     def __init__(self, vertices):
-        # No. of vertices
         self.V = vertices
-        # default dictionary to store graph
         self.graph = defaultdict(list)
 
     def add_edge(self, u, v):
@@ -402,7 +359,6 @@ class Graph:
 
         visited[u] = True
         path.append(u)
-        # If current vertex is same as destination, then print
         if self.graph[u] == []:
             try:
                 if self.path:
@@ -414,16 +370,12 @@ class Graph:
                 if visited[i] == False:
                     self.get_all_paths_util(i, visited, path)
 
-        # remove current vertex from path[] and mark it as unvisited
         path.pop()
         visited[u] = False
 
     def get_all_paths(self, s):
-        # mark all the vertices as not visited
         visited = {}
         for i in self.V:
             visited[i] = False
-        # create an array to store paths
         path = []
-        # call the recursive helper function to print all paths
         self.get_all_paths_util(s, visited, path)

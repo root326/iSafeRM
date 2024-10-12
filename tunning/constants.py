@@ -18,20 +18,18 @@ HOST_CONFIG = {
     'host1': ['192.168.1.237', 'aituningnode1'],
     'host2': ['192.168.1.238', 'aituningnode2'],
     'host3': ['192.168.1.239', 'aituningnode3'],
-    'host4': ['192.168.1.183', 'node3']  # 未用
+    'host4': ['192.168.1.183', 'node3']
 }
 
 GLOBAL_CONFIG = {
-    'python_interpreter': '/home/lilong/miniconda3/envs/mytunning/bin/python',
+    'python_interpreter': '/home/XXXX-1/miniconda3/envs/mytunning/bin/python',
     'prometheus_host': f"http://{HOST_CONFIG['host1'][0]}:9090",
     'jaeger_host': f"http://{HOST_CONFIG['host1'][0]}:16686",
-    # 'results_dir': _PROJECT_ROOT_DIR / 'results',
     'results_dir': _PROJECT_ROOT_DIR / 'output/results',
 
     'configs_dir': _PROJECT_ROOT_DIR / 'configs',
     'tmp_dir': _PROJECT_ROOT_DIR / '.tmp',
     'deploy_dir': _PROJECT_ROOT_DIR / 'deploy',
-    # 'tmp_dir': '/home/lilong/tuning_microservice/.tmp'
     'ycsb_benchmark': ['redis', 'mongodb', 'memcached', 'mysql'],
     'wrk_benchmark': ['nginx'],
     'result_file_column': ['task', 'latency', 'resource', 'observation', 'reward',
@@ -67,7 +65,6 @@ BENCHMARK_CONFIG = {
             'playbook_dir': '',
             'deploy_host': HOST_CONFIG['host1'][1],
             'service_ip': HOST_CONFIG['host1'][0],
-            # 'service_ip': 'http://192.168.1.180:80',
             'exporter_url': f"http://{HOST_CONFIG['host1'][0]}:9113/metrics",
             'interval': 90,
             'port': '80',
@@ -121,8 +118,6 @@ BENCHMARK_CONFIG = {
             'entry_ip': f"{HOST_CONFIG['host1'][0]}",
             'operations': {
                 "ComposePost": "/wrk2-api/post/compose",
-                # "HomeTimeline": "/wrk2-api/home-timeline/read",
-                # "UserTimeline": "/wrk2-api/user-timeline/read",
             },
             'operation': "/wrk2-api/post/compose",
             'output': GLOBAL_CONFIG['tmp_dir'] / '.social_network_tmp' / 'output',
@@ -139,7 +134,7 @@ BENCHMARK_CONFIG = {
             'results': GLOBAL_CONFIG['results_dir'] / 'social_network',
             'bench_log': 'compose_post.log',
             'p_latency': '950000',
-            'default_conf': '/home/lilong/tuning_microservice/deploy/social_network/ansible/default_conf.yml',
+            'default_conf': '/home/XXXX-1/tuning_microservice/deploy/social_network/ansible/default_conf.yml',
             'span_to_ms': {
                 'nginx-web-server': 'nginx-web-server_/wrk2-api/post/compose',
                 'compose-post-service': 'nginx-web-server_ComposePost',

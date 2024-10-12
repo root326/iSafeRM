@@ -12,8 +12,6 @@ import numpy as np
 from tunning.bench.microservices_benchmark import MicroservicesBenchmark
 from tunning.utils import get_bench_name, parser_args
 import re
-# from experiments.SafeScaler.PBA import PBScaler
-# from PBScaler.Config import Config
 
 def get_benchmark(benchmark):
     return MicroservicesBenchmark(benchmark)
@@ -30,7 +28,6 @@ def coast_time(func):
 
 class BenchMark:
     def __init__(self, benchmark, env, steps, task_name):
-        # self._benchmark = benchmark
         self._benchmark = get_bench_name(env)
         self._env = env
         self._steps = steps
@@ -38,7 +35,6 @@ class BenchMark:
         self._workload = [int(re.findall(r'\d+', env_dir)[0])]
         self._csv_path = BENCHMARK_CONFIG['microservices'][self._benchmark][
                              'configs_dir']  / f"{self._env.split('-')[1]}.csv"
-        # self._csv_path = BENCHMARK_CONFIG['microservices'][self._benchmark]['configs_dir'] / f"{self._env}.csv"
         self._result_path = BENCHMARK_CONFIG['microservices'][self._benchmark][
                                 'experiments_results'] / f"{task_name}-{time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())}"
         self._bench = get_benchmark(self._benchmark)
@@ -52,10 +48,8 @@ class BenchMark:
             resultPath=self._result_path / 'trace',
         )
         self._bench.cleanup(0)
-        # self.pbscaler =
 
     def init_config(self):
-        # 创建存储收集数据的文件
         path_list = [self._result_path, self._result_path / 'conf', self._result_path / 'log',
                      self._result_path / 'trace']
         for p in path_list:
@@ -64,7 +58,6 @@ class BenchMark:
 
         self._conf = self._result_path / 'conf' / f"{self._task_id}_conf.yml"
         self.get_resource_conf_experiment(self._csv_path, self._conf)
-        # = conf_path
 
     def get_resource_conf_experiment(self, csv_path, conf_path):
         parameters = pd.read_csv(csv_path)
@@ -74,7 +67,6 @@ class BenchMark:
                 parameter_name = row['microservice'].replace('-', '_') + '_' + row['parameter'].replace('-', '_')
                 if 'replicas' in parameter_name:
                     curr_conf[parameter_name] = 1
-                    # curr_conf[parameter_name] = int(range_list[1]) if performance == 1 else int(range_list[0])
                     if 'nginx' in parameter_name or 'frontend' in parameter_name:
                         curr_conf[parameter_name] = 1
                 elif 'resource' in parameter_name:
@@ -83,10 +75,6 @@ class BenchMark:
                     curr_conf[prefix + 'cpus'] = round(curr_conf[parameter_name] * 0.1, 2)
                     curr_conf[prefix + 'memory'] = round(curr_conf[parameter_name] * 0.2, 2)
 
-                # prefix = parameter_name.split('resource')[0]
-                # curr_conf[prefix + 'cpus'] = round(int(self._task_id + 1) * 0.1, 2)
-                # curr_conf[prefix + 'memory'] = round(int(self._task_id + 1) * 0.2, 2)
-
         conf_path.write_text(yaml.safe_dump(curr_conf))
         return conf_path
 
@@ -94,7 +82,6 @@ class BenchMark:
         for i in range(self._steps):
             start_time = time.time()
             self._bench.run(self._conf, self._workload, 0)
-            # self._bench.run_workload()
             for j in range(5):
                 self._bench.run_workload(self._workload[0])
 
@@ -132,15 +119,10 @@ def get_top_services(causal_scores):
     return top_services
 
 
-# top_services = list(set(top_services))
-# top_services = get_top_services(median_attribs)
-# top_services
-
 
 @coast_time
 def compute_causal_services(ms_csv, ms_causal_graph, slo=200000):
     ms_data = pd.read_csv(ms_csv)
-    # ms_data['traceLatency']
     ms_normal = ms_data[ms_data['traceLatency'] < slo].head(1000)
     ms_normal_len = len(ms_normal)
     ms_abnormal = ms_data[ms_data['traceLatency'] > slo].head(ms_normal_len)

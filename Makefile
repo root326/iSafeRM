@@ -17,7 +17,6 @@ run-online:
 deploy-playbook-socialnetwork:
 	@cd ~/iSafeRM/deploy/social_network/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
 		ansible-playbook deploy_default.yml
-#		ansible-playbook /home/lilong/iSafeRM/tests/site-test.yml -e conf_path=/home/lilong/iSafeRM/tests/sn_conf.yml
 
 .PHONY: clean-playbook-socialnetwork
 clean-playbook-socialnetwork:
@@ -33,13 +32,12 @@ clean-playbook-hotel-reservation:
 .PHONY: deploy-playbook-hotel-reservation
 deploy-playbook-hotel-reservation:
 	@cd ~/iSafeRM/deploy/hotel_reservation/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
-		ansible-playbook deploy.yml # -e conf_path=/home/lilong/iSafeRM/results/media_microservices/bo_tpe-2023-12-25-17-41-41-wk10-mm_key_services_3key_parameters/conf/0_conf.yml
+		ansible-playbook deploy.yml
 
 .PHONY: deploy-playbook-media-microservices
 deploy-playbook-media-microservices:
 	@cd ~/iSafeRM/deploy/media_microservices/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
-		ansible-playbook deploy.yml # -e conf_path=/home/lilong/iSafeRM/results/media_microservices/bo_tpe-2023-12-25-17-41-41-wk10-mm_key_services_3key_parameters/conf/0_conf.yml
-
+		ansible-playbook deploy.yml
 
 .PHONY: clean-playbook-media-microservices
 clean-playbook-media-microservices:
@@ -100,25 +98,25 @@ clean-playbook-prometheus:
 
 .PHONY: deploy-playbook-grafana
 deploy-playbook-grafana:
-	@cd /home/lilong/iSafeRM/deploy/software/grafana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
+	@cd /home/XXXX-1/iSafeRM/deploy/software/grafana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
 		ansible-playbook grafana_deploy.yml
 
 
 .PHONY: clean-playbook-kibana
 clean-playbook-kibana:
-	@cd /home/lilong/iSafeRM/deploy/software/kibana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
+	@cd /home/XXXX-1/iSafeRM/deploy/software/kibana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
 		ansible-playbook kibana_clean.yml
 
 
 .PHONY: deploy-playbook-kibana
 deploy-playbook-kibana:
-	@cd /home/lilong/iSafeRM/deploy/software/kibana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
+	@cd /home/XXXX-1/iSafeRM/deploy/software/kibana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
 		ansible-playbook kibana_deploy.yml
 
 
 .PHONY: clean-playbook-grafana
 clean-playbook-grafana:
-	@cd /home/lilong/iSafeRM/deploy/software/grafana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
+	@cd /home/XXXX-1/iSafeRM/deploy/software/grafana/ansible && $(CONDA_ACTIVATE) activate mytunning &&  \
 		ansible-playbook grafana_clean.yml
 
 

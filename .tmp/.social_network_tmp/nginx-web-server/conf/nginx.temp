@@ -1,22 +1,16 @@
-# Load the OpenTracing dynamic module.
+
 load_module modules/ngx_http_opentracing_module.so;
 
-# Checklist: Make sure that worker_connections * worker_processes
-# is greater than the total connections between the client and Nginx. 
 events {
   worker_connections  512;
 }
 
-# Checklist: Make sure that worker_processes == #cores you gave to
-# nginx process
 worker_processes  8;
 
-# error_log  logs/error.log;
 
 thread_pool thread1 threads=32 max_queue=65536;
 
 http {
-  # Load a vendor tracer
   opentracing on;
   opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
 
@@ -26,21 +20,16 @@ http {
   log_format main '$remote_addr - $remote_user [$time_local] "$request"'
                   '$status $body_bytes_sent "$http_referer" '
                   '"$http_user_agent" "$http_x_forwarded_for"';
-  # access_log  logs/access.log  main;
 
   sendfile        on;
   tcp_nopush      on;
   tcp_nodelay     on;
 
   aio threads=thread1;
-  # Checklist: Make sure the keepalive_timeout is greateer than
-  # the duration of your experiment and keepalive_requests
-  # is greateer than the total number of requests sent from
-  # the workload generator
+
   keepalive_timeout  1200s;
   keepalive_requests 1000000;
 
-  # Docker default hostname resolver
   resolver 127.0.0.11 ipv6=off;
 
   lua_package_path '/usr/local/openresty/nginx/lua-scripts/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;;';
@@ -67,14 +56,10 @@ http {
 
   server {
 
-    # Checklist: Set up the port that nginx listens to.
     listen       8080 reuseport;
     server_name  localhost;
 
-    # Checklist: Turn of the access_log and error_log if you
-    # don't need them.
     access_log  off;
-    # error_log off;
 
     lua_need_request_body on;
 
@@ -82,8 +67,6 @@ http {
         stub_status;
     }
 
-    # Checklist: Make sure that the location here is consistent
-    # with the location you specified in wrk2.
     location /api/user/register {
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';

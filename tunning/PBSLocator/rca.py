@@ -22,9 +22,6 @@ def get_top_services(causal_scores):
         if service_name not in top_services:
             top_services.append(service_name)
     return top_services
-# top_services = list(set(top_services))
-# top_services = get_top_services(median_attribs)
-# top_services
 
 
 def compute_causal_services(ms_csv,ms_causal_graph,slo=200000):

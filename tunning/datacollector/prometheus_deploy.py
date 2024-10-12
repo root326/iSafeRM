@@ -40,7 +40,6 @@ def prometheus_deploy():
         "ansible-playbook",
         deploy_playbook,
         f"-e "
-        # f"node_exporter={node_exporter} "
         f"node_exporter_0={node_exporter_0} "
         f"node_exporter_1={node_exporter_1} "
         f"node_exporter_2={node_exporter_2} "

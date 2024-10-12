@@ -32,7 +32,6 @@ def my_cdnod(data: ndarray, c_indx: ndarray, alpha: float=0.05, indep_test: str=
     -------
     cg : a CausalGraph object over the augmented dataset that includes c_indx
     """
-    # augment the variable set by involving c_indx to capture the distribution shift
     data_aug = np.concatenate((data, c_indx), axis=1)
     if mvcdnod:
         return mvcdnod_alg(data=data_aug, alpha=alpha, indep_test=indep_test, correction_name=correction_name,
@@ -88,16 +87,12 @@ def cdnod_alg(data: ndarray, c_indx: ndarray, alpha: float, indep_test: str, sta
     indep_test = CIT(data, indep_test, **kwargs)
     cg_1 = SkeletonDiscovery.skeleton_discovery(data, alpha, indep_test, stable)
 
-    # orient the direction from c_indx to X, if there is an edge between c_indx and X
     c_indx_max = data.shape[1]
     c_indx_min = data.shape[1] - c_indx.shape[1]
     for c_indx_id in range(c_indx_min,c_indx_max):
         print(c_indx_id)
         for i in cg_1.G.get_adjacent_nodes(cg_1.G.nodes[c_indx_id]):
             cg_1.G.add_directed_edge(cg_1.G.nodes[c_indx_id], i)
-    # c_indx_id = data.shape[1] - 1
-    # for i in cg_1.G.get_adjacent_nodes(cg_1.G.nodes[c_indx_id]):
-    #     cg_1.G.add_directed_edge(cg_1.G.nodes[c_indx_id], i)
 
     if background_knowledge is not None:
         orient_by_background_knowledge(cg_1, background_knowledge)
@@ -163,23 +158,11 @@ def mvcdnod_alg(data: ndarray, alpha: float, indep_test: str, correction_name: s
 
     start = time.time()
     indep_test = CIT(data, indep_test, **kwargs)
-    ## Step 1: detect the direct causes of missingness indicators
     prt_m = get_parent_missingness_pairs(data, alpha, indep_test, stable)
-    # print('Finish detecting the parents of missingness indicators.  ')
-
-    ## Step 2:
-    ## a) Run PC algorithm with the 1st step skeleton;
     cg_pre = SkeletonDiscovery.skeleton_discovery(data, alpha, indep_test, stable, verbose=verbose,
                                                   show_progress=show_progress)
     cg_pre.to_nx_skeleton()
-    # print('Finish skeleton search with test-wise deletion.')
-
-    ## b) Correction of the extra edges
     cg_corr = skeleton_correction(data, alpha, correction_name, cg_pre, prt_m, stable)
-    # print('Finish missingness correction.')
-
-    ## Step 3: Orient the edges
-    # orient the direction from c_indx to X, if there is an edge between c_indx and X
     c_indx_id = data.shape[1] - 1
     for i in cg_corr.G.get_adjacent_nodes(cg_corr.G.nodes[c_indx_id]):
         cg_corr.G.add_directed_edge(i, cg_corr.G.nodes[c_indx_id])

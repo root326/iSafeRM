@@ -1,9 +1,4 @@
---
-----Author: xiajun
-----Date: 20151020
-----
 local RpcClient = require "RpcClient"
---local TestServiceClient = require "resty.thrift.thrift-idl.lua_test_TestService"
 local RpcClientFactory = RpcClient:new({
 	__type = 'Client'
 })

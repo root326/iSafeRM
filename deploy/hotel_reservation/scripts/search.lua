@@ -24,7 +24,7 @@ local function search_hotel()
     "&outDate=" .. out_date_str .. "&lat=" .. tostring(lat) .. "&lon=" .. tostring(lon)
 
   local headers = {}
-  -- headers["Content-Type"] = "application/x-www-form-urlencoded"
+
   return wrk.format(method, path, headers, nil)
 end
 

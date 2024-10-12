@@ -27,7 +27,7 @@ class MicroservicesENV(CMDP):
     def __init__(self, env_id: str,
                  device: torch.device = DEVICE_CPU,
                  **kwargs: Any) -> None:
-        # print(env_id.split('-')[1])
+
         super().__init__(env_id)
         self._env_id = env_id
 
@@ -35,8 +35,6 @@ class MicroservicesENV(CMDP):
         my_logger.info("env create: " + self._env_id)
         env_dir = self._env_id.split('-')[0]
         self._workload = [int(re.findall(r'\d+',env_dir)[0])]
-        # if self._namespace == 'hr' or 'sn':
-        #     env_dir = self.dynamic_tuning()
         self._num_envs = 1
         self._device = torch.device(device)
         self._csv_path = BENCHMARK_CONFIG['microservices'][self.benchmark][
@@ -54,10 +52,7 @@ class MicroservicesENV(CMDP):
         self._results_summary_file = self._result_path / f"_results_summary.csv"
         results_summary_file = pd.DataFrame(columns=GLOBAL_CONFIG['result_file_column'])
         results_summary_file.to_csv(self._results_summary_file, index=False)
-        # self._act_dim = get_conf_row_count(self._conf_path)
         self._act_dim = len(self._config_dict)
-        # cpu + memory + workload + resource + latency
-        # self._workload = BENCHMARK_CONFIG['microservices'][self.benchmark]['workload']
         self._obs_dim = len(self._key_services) * 2 + len(self._workload) + 1 + 1
         self._task_id = 0
         random.seed(123)
@@ -80,11 +75,8 @@ class MicroservicesENV(CMDP):
         self._replay = False
         self._last_safe_obs = []
         self._last_safe_conf_dict = {}
-        # self._init_env()
-
     def get_bench_name(self):
         bench = self._env_id.split('-')[1].split('_')[0]
-        # print(self._namespace)
         if bench == 'sn':
             return 'social_network', bench
         if bench == 'mm':
@@ -95,7 +87,6 @@ class MicroservicesENV(CMDP):
             return 'hotel_reservation', bench
 
     def _init_env(self):
-        # self._bench.cleanup(self._task_id)
 
         obs, _, _, _, _, info = self.run_config()
         self._init_obs = obs
@@ -121,17 +112,12 @@ class MicroservicesENV(CMDP):
         return performance
 
     def get_cost(self):
-        # 默认预算是100，当延迟第一次超过100的时候才开始消耗安全代价
         if self._curr_latency <= self._slo - 100:
             return 0
         if self._cost_flag:
             self._cost_flag = False
             return round(self._curr_latency - ( self._slo - 100), 2)
         else:
-            # if self._curr_latency < self._pre_latency:
-            #     cost = 0
-            # else:
-            #     cost = self._curr_latency - self._pre_latency
             cost = 0 if self._curr_latency < self._pre_latency else self._curr_latency - self._pre_latency
             return round(cost, 2)
 
@@ -145,12 +131,10 @@ class MicroservicesENV(CMDP):
         key_services_cpu = []
         key_services_memory = []
         for service in self._key_services:
-            # print(service)
             key_services_cpu.append(
                 get_container_cpu_usage(start_time=start_time, end_time=end_time, service_name=f"{self._namespace}_{service}"))
             key_services_memory.append(
                 get_container_memory_usage(start_time=start_time, end_time=end_time, service_name=f"{self._namespace}_{service}"))
-        # 若获取失败，则利用以前的数据
         for i in range(len(key_services_cpu)):
             if -1 in key_services_cpu:
                 index = key_services_cpu.index(-1)
@@ -200,26 +184,20 @@ class MicroservicesENV(CMDP):
 
         for f in Path(self._output).iterdir():
             f.rename(self._result_path_log / f"{self._task_id}_{f.name}")
-        # 获取环境状态
         observation = cpu_usage + mem_usage + [resource] + self._workload + [latency]
         my_logger.info("original_observation: " + str(observation))
-        # observation = [round(x, 2) for x in min_max(observation, 10)]
-
-        # reward
         self._curr_resource = resource
         self._curr_latency = latency
         reward = self.get_reward()
         cost = self.get_cost()
         if latency > self._slo:
             terminated = True
-            # info
             self._cost_flag = True
             info = {'final_observation': observation}
         if latency < self._slo * 0.5:
             self._last_safe_obs = observation
             self._last_safe_conf_dict = self._config_dict
         result_temp = {}
-        # if reward != 0:
         my_logger.info("observation: " + str(observation))
         my_logger.info("terminated/truncated: " + str(terminated))
         my_logger.info("reward: " + str(reward))
@@ -234,10 +212,8 @@ class MicroservicesENV(CMDP):
         result_temp['workload'] = [';'.join([str(x) for x in self._workload])]
         conf_vector = self.get_conf_vector()
         result_temp['conf'] = [';'.join([str(x) for x in conf_vector])]
-        result_data = pd.DataFrame(result_temp)  # a需要是字典格式
-        # mode='a'表示追加, index=True表示给每行数据加索引序号, header=False表示不加标题
+        result_data = pd.DataFrame(result_temp)
         result_data.to_csv(self._results_summary_file, mode='a', index=False, header=False)
-        # result_data.to_csv(self._replay_path, mode='a', index=False, header=False)
         self._task_id += 1
         self._pre_latency = latency
         self._pre_resource = resource
@@ -285,22 +261,18 @@ class MicroservicesENV(CMDP):
             else:
                 coefficient = 0
             if v['type'] == 'categorical':
-                # index = int(action[i] / (1 / len(v['range_list'])))
                 index = int(v['value'] + v['step'] * coefficient)
                 if index < 0 or index >= len(v['range_list']):
                     curr_conf[k] = v['range_list'][0]
                 else:
                     curr_conf[k] = v['range_list'][index]
                 self._config_dict[k]['value'] = index
-                # curr_config_dict[k] = curr_conf[k]
             elif v['type'] == 'discrete':
                 curr_conf[k] = int(v['value'] + v['step'] * coefficient)
                 if curr_conf[k] < v['min']:
                     curr_conf[k] = round(int(v['min']), 1)
                 if curr_conf[k] > v['max']:
                     curr_conf[k] = round(int(v['max']), 1)
-                # if 'nginx' in k and 'replicas' in k:
-                #     curr_conf[k] = 1
                 if 'resource' in k:
                     prefix = k.split('resource')[0]
                     if self._namespace == 'tt':
@@ -315,7 +287,6 @@ class MicroservicesENV(CMDP):
                     curr_conf[k] = round(float(v['min']), 1)
                 if curr_conf[k] > v['max']:
                     curr_conf[k] = round(float(v['max']), 1)
-                # 更新记录的参数值
                 self._config_dict[k]['value'] = curr_conf[k]
             i += 1
         return curr_conf
@@ -330,8 +301,6 @@ class MicroservicesENV(CMDP):
         torch.Tensor,
         dict[str, Any],
     ]:
-        # my_logger.info("original_action: " + str(action))
-        # action = [round(y, 2) for y in min_max([x for x in action.cpu().numpy()])]
         action = [x for x in action.cpu().numpy()]
         my_logger.info("action: " + str(action))
 
@@ -371,7 +340,6 @@ class MicroservicesENV(CMDP):
         return torch.as_tensor(obs, dtype=torch.float32, device=self._device), {}
 
     def set_seed(self, seed: int) -> None:
-        # self.reset()
         pass
 
     def sample_action(self) -> torch.Tensor:
@@ -391,7 +359,6 @@ class MicroservicesENV(CMDP):
         return MicroservicesBenchmark(self.benchmark)
 
     def get_conf_vector(self):
-        # 得到每次配置的值，用于相似度计算
         conf_vector = []
         for k, v in self._config_dict.items():
             conf_vector.append(v['value'])

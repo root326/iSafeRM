@@ -1,21 +1,3 @@
---
--- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements. See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership. The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"), you may not use this file except in compliance
--- with the License. You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied. See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
 
 local Thrift = require 'Thrift'
 local TProtocol = require 'TProtocol'
@@ -90,16 +72,13 @@ local EscapeCharVals = {
 }
 
 local JSONCharTable = {
-  --0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
     0,  0,  0,  0,  0,  0,  0,  0, 98,116,110,  0,102,114,  0,  0,
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     1,  1,34,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
 }
 
--- character table string
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
--- encoding
 local function base64_encode(data)
   return ((data:gsub('.', function(x)
     local r,b='',x:byte()
@@ -113,7 +92,6 @@ local function base64_encode(data)
   end)..({ '', '==', '=' })[#data%3+1])
 end
 
--- decoding
 local function base64_decode(data)
   data = string.gsub(data, '[^'..b..'=]', '')
   return (data:gsub('.', function(x)
@@ -220,7 +198,7 @@ end
 function TJSONProtocol:writeJSONString(str)
   self:writeElemSeparator()
   self.trans:write(JSONNode.StringDelimiter)
-  -- TODO escape special characters
+
   local length = string.len(str)
   local ii = 1
   while ii <= length do
@@ -236,7 +214,6 @@ function TJSONProtocol:writeJSONBase64(str)
   local length = string.len(str)
   local offset = 1
   while length >= 3 do
-    -- Encode 3 bytes at a time
     local bytes = base64_encode(string.sub(str, offset, offset+3))
     self.trans:write(bytes)
     length = length - 3
@@ -420,7 +397,7 @@ function TJSONProtocol:writeString(str)
 end
 
 function TJSONProtocol:writeBinary(str)
-  -- Should be utf-8
+
   self:writeJSONBase64(str)
 end
 
@@ -725,7 +702,6 @@ local TJSONProtocolFactory = TProtocolFactory:new{
 }
 
 function TJSONProtocolFactory:getProtocol(trans)
-  -- TODO Enforce that this must be a transport class (ie not a bool)
   if not trans then
     terror(TProtocolException:new{
       message = 'Must supply a transport to ' .. ttype(self)

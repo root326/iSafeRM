@@ -2,16 +2,11 @@
 
 - name: prepare files
   hosts: all
-#  vars:
-#    workload1: workload1
-#    workload2: workload2
-#    workload2 workload3
+
   vars_files:
     - "{{ conf_path }}"
   vars:
     benchmark: social_network
-
-#    - "~/{{ project_name }}/tests/test_conf.yml"
 
   tasks:
     - name: check if .tmp exists
@@ -50,15 +45,8 @@
   hosts: master
   vars:
     benchmark: social_network
-    ansible_python_interpreter: /home/lilong/miniconda3/envs/mytunning/bin/python
+    ansible_python_interpreter: /home/XXXX-1/miniconda3/envs/mytunning/bin/python
   tasks:
-#    - name: Create Docker Overlay Network
-#      docker_network:
-#        name: social-network-overlay
-#        driver: overlay
-##        ipam_driver: default
-#        ipam_config:
-#          - subnet: 12.0.0.0/8
 
     - name: deploy socialnetwork benchmark use docker swarm-composepost
       community.docker.docker_stack:
@@ -76,17 +64,6 @@
         path: ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output
         state: directory
 
-#    - name: initial socialnetwork benchmark
-#      shell:
-#        cmd: >
-#          /home/lilong/miniconda3/envs/mytunning/bin/python scripts/init_social_graph.py --ip={{ entry_ip }} --graph=socfb-Reed98
-#          > ~/{{ project_name }}/.tmp/.{{ benchmark }}_tmp/output/init_social_graph.txt 2>&1
-#        chdir: ~/{{ project_name }}/DeathStarBench/socialNetwork
-
-#    - name: wait for 10 seconds
-#      ansible.builtin.wait_for:
-#        timeout: 10
-#
     - name: compose post {{ workload1 }}
       shell:
         cmd: >
@@ -96,25 +73,6 @@
       async: 500
       poll: 0
       register: compose_post
-#
-#    - name: read user timeline {{ workload2 }}
-#      shell:
-#        cmd: >
-#          bash read_user_timeline.sh {{ entry_ip }} {{ benchmark }}
-#        chdir: ~/{{ project_name }}/deploy/social_network/workload
-#      async: 500
-#      poll: 0
-#      register: read_user_timeline
-#
-#    - name: read home timeline {{ workload3 }}
-#      shell:
-#        cmd: >
-#          bash read_home_timeline.sh {{ entry_ip }} {{ benchmark }}
-#        chdir: ~/{{ project_name }}/deploy/social_network/workload
-#      async: 500
-#      poll: 0
-#      register: read_home_timeline
-##
     - name: wait for compose-post finish
       ansible.builtin.async_status:
         jid: "{{ item.ansible_job_id }}"
@@ -124,5 +82,3 @@
       delay: 30
       with_items:
         - "{{ compose_post }}"
-#        - "{{ read_user_timeline }}"
-#        - "{{ read_home_timeline }}"
