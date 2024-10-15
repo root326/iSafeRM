@@ -58,8 +58,8 @@ top_services = compute_causal_services(csv,graph)
 
 
 
-# PCPIdenter
-PCPIdenter is responsible for identifying the inherent performance-critical parameters of complex bottleneck services such as databases under current workload characteristics. 
+# PCPIdentifier
+PCPIdentifier is responsible for identifying the inherent performance-critical parameters of complex bottleneck services such as databases under current workload characteristics. 
 
 1. You can find the code in the tuning/PCPIdenter directory and run with jupyter
 2. In the folder we have collected some offline data for identifying the key parameters of the database. You can collect the data in your own environment in the following ways
