@@ -1,1 +1,0 @@
-{"compose-post-service": 153479.40208243995, "compose-post-redis_write": 34506.00134067972, "user-service": 337.1854851591195, "nginx-web-server": 305.42277852193286, "post-storage-service": 255.5524122579136, "post-storage-mongodb_write": 162.3233636979345, "user-timeline-mongodb_write": 14.95184557197642}
